@@ -20,7 +20,7 @@ Django web app for patient appointment booking and clinic administration.
    python manage.py runserver
    ```
 4. Visit http://127.0.0.1:8000/
-   - Admin login: `admin` / `ChangeMe123!` (change this immediately)
+   - Admin login: `admin` / `Colgate123` (change this immediately)
    - Register a new account to test the patient flow.
 
 ## Environment variables (.env, not committed)

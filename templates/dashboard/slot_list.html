@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Manage Slots{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Appointment Slots</h2>
+    <a href="{% url 'dashboard:slot_create' %}" class="btn text-white" style="background-color:#0d6e5f;">+ Add Slot</a>
+</div>
+
+<form method="get" class="mb-3 d-flex gap-2">
+    <select name="doctor" class="form-select w-auto" onchange="this.form.submit()">
+        <option value="">All doctors</option>
+        {% for doctor in doctors %}
+            <option value="{{ doctor.id }}" {% if selected_doctor == doctor.id|stringformat:"s" %}selected{% endif %}>{{ doctor.full_name }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover bg-white align-middle">
+        <thead><tr><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            {% for slot in slots %}
+                <tr>
+                    <td>{{ slot.doctor.full_name }}</td>
+                    <td>{{ slot.date }}</td>
+                    <td>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</td>
+                    <td>
+                        {% if slot.is_booked %}<span class="badge bg-warning text-dark">Booked</span>
+                        {% else %}<span class="badge bg-success">Open</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if not slot.is_booked %}
+                            <a href="{% url 'dashboard:slot_delete' slot.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">No slots yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

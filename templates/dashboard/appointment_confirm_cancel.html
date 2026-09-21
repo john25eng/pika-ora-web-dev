@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Cancel Appointment{% endblock %}
+{% block content %}
+<h2>Cancel Appointment</h2>
+<p>Cancel the appointment for <strong>{{ appointment.patient.get_full_name|default:appointment.patient.username }}</strong>
+   with {{ appointment.slot.doctor.full_name }} on {{ appointment.slot.date }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+    <a href="{% url 'dashboard:appointment_list' %}" class="btn btn-outline-secondary">Back</a>
+</form>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Edit Patient{% endblock %}
+{% block content %}
+<h2>Edit Patient: {{ patient.username }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="mb-3 {% if field.name == 'is_active' %}form-check{% endif %}">
+            <label class="form-label {% if field.name == 'is_active' %}form-check-label{% endif %}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn text-white" style="background-color:#0d6e5f;">Save</button>
+    <a href="{% url 'dashboard:patient_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+<p class="text-muted small mt-2">Disabling the account prevents the patient from logging in, without deleting their appointment history.</p>
+{% endblock %}

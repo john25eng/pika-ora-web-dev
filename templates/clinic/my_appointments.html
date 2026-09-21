@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments - Piki Ora{% endblock %}
+{% block content %}
+<h2 class="mb-4">My Appointments</h2>
+{% if appointments %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white">
+        <thead>
+            <tr><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Notes</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+                <tr>
+                    <td>{{ appt.slot.doctor.full_name }}</td>
+                    <td>{{ appt.slot.date }}</td>
+                    <td>{{ appt.slot.start_time|time:"H:i" }}</td>
+                    <td>
+                        {% if appt.status == 'confirmed' %}
+                            <span class="badge badge-confirmed">Confirmed</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">Cancelled</span>
+                        {% endif %}
+                    </td>
+                    <td class="small">{{ appt.notes|default:"-"|truncatewords:8 }}</td>
+                    <td class="text-end">
+                        {% if appt.status == 'confirmed' %}
+                            <a href="{% url 'clinic:edit_appointment' appt.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'clinic:cancel_appointment' appt.id %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <p>You have no appointments yet. <a href="{% url 'clinic:doctor_list' %}">Book one now</a>.</p>
+{% endif %}
+{% endblock %}

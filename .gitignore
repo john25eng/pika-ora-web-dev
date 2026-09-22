@@ -8,3 +8,5 @@ media/
 venv/
 .idea/
 *.log
+node_modules/
+dist/

@@ -4,11 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('django-admin/', admin.site.urls), # dev/testing only - not the marked interface
+    path('django-admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('accounts/', include('accounts.urls')),
-    path('dashboard/', include('dashboard.urls')),
-    path('', include('clinic.urls')),
 ]
 
 if settings.DEBUG:

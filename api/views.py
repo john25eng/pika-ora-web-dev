@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 
 from clinic.models import Doctor, AppointmentSlot, Appointment
-from clinic.views import send_confirmation_email
+
 
 from .permissions import IsAdminRole, IsPatientRole
 from .serializers import (
@@ -21,6 +21,23 @@ from .serializers import (
 
 User = get_user_model()
 
+def send_confirmation_email(appointment):
+    from django.core.mail import send_mail
+    from django.conf import settings
+    try:
+        send_mail(
+            subject='Piki Ora Medical Centre - Appointment Confirmed',
+            message=(
+                f'Hi {appointment.patient.first_name or appointment.patient.username},\n\n'
+                f'Your appointment with {appointment.slot.doctor.full_name} is confirmed for '
+                f'{appointment.slot.date} at {appointment.slot.start_time.strftime("%H:%M")}.'
+            ),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            recipient_list=[appointment.patient.email] if appointment.patient.email else [],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
 
 # ============ auth ============
 

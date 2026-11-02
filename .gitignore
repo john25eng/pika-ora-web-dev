@@ -10,3 +10,4 @@ venv/
 *.log
 node_modules/
 dist/
+.env.example

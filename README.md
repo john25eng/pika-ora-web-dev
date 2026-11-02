@@ -18,6 +18,6 @@ Django web app for patient appointment booking and clinic administration.
    python manage.py shell < seed_admin.py
    python manage.py runserver
    ```
-4. Visit http://127.0.0.1:8000/
+4. Visit https://pika-ora-web-dev-1.onrender.com
    - Admin login: `admin` / `Colgate123` 
    - Register a new account to test the patient flow.

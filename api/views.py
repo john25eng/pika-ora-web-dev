@@ -154,6 +154,57 @@ class AppointmentNoteUpdateView(generics.UpdateAPIView):
             patient=self.request.user, status=Appointment.Status.CONFIRMED
         )
 
+def reschedule_appointment(appointment_id, slot_id, patient=None):
+    """moves a confirmed appointment to another open slot inside one transaction.
+    returns (appointment, None) on success or (None, error_response) on failure.
+    pass patient to restrict the lookup to that patient's own appointments."""
+    try:
+        slot_id = int(slot_id)
+    except (TypeError, ValueError):
+        return None, Response({'detail': 'A valid slot_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        appointments = Appointment.objects.select_for_update()
+        if patient is not None:
+            appointments = appointments.filter(patient=patient)
+        try:
+            appointment = appointments.get(pk=appointment_id, status=Appointment.Status.CONFIRMED)
+        except Appointment.DoesNotExist:
+            return None, Response({'detail': 'Appointment not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            new_slot = AppointmentSlot.objects.select_for_update().get(pk=slot_id)
+        except AppointmentSlot.DoesNotExist:
+            return None, Response({'detail': 'Slot not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if new_slot.pk == appointment.slot_id:
+            return None, Response({'detail': 'That is already your current slot.'}, status=status.HTTP_400_BAD_REQUEST)
+        if new_slot.is_booked:
+            return None, Response({'detail': 'Sorry, that slot is already booked.'}, status=status.HTTP_409_CONFLICT)
+        if new_slot.date < timezone.localdate():
+            return None, Response({'detail': 'You cannot move an appointment to a past date.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_slot = appointment.slot
+        old_slot.is_booked = False
+        old_slot.save(update_fields=['is_booked'])
+        new_slot.is_booked = True
+        new_slot.save(update_fields=['is_booked'])
+        appointment.slot = new_slot
+        appointment.save(update_fields=['slot', 'updated_at'])
+
+    return appointment, None
+
+
+class RescheduleAppointmentView(APIView):
+    """Lets a patient move their own confirmed appointment to another open slot."""
+    permission_classes = [IsPatientRole]
+
+    def post(self, request, pk):
+        appointment, error = reschedule_appointment(pk, request.data.get('slot_id'), patient=request.user)
+        if error:
+            return error
+        send_confirmation_email(appointment)
+        return Response(AppointmentSerializer(appointment).data)
 
 class CancelAppointmentView(APIView):
     permission_classes = [IsPatientRole]
@@ -243,6 +294,13 @@ class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
         appointment = self.get_object()
         if appointment.status == Appointment.Status.CONFIRMED:
             appointment.cancel()
+        return Response(AppointmentSerializer(appointment).data)
+    @action(detail=True, methods=['post'])
+    def reschedule(self, request, pk=None):
+        appointment, error = reschedule_appointment(pk, request.data.get('slot_id'))
+        if error:
+            return error
+        send_confirmation_email(appointment)
         return Response(AppointmentSerializer(appointment).data)
 
 class AdminPatientViewSet(viewsets.ModelViewSet):

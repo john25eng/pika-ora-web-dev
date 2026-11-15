@@ -1,46 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { patientApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
 
 export default function DoctorSchedule() {
   const { doctorId } = useParams();
   const navigate = useNavigate();
-  const [slots, setSlots] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, loading, error, reload } = useFetch(
+    () => patientApi.doctorSlots(doctorId),
+    [doctorId]
+  );
+  const slots = data ?? [];
+  const [bookError, setBookError] = useState('');
   const [bookingId, setBookingId] = useState(null);
 
-  function loadSlots() {
-    setLoading(true);
-    patientApi.doctorSlots(doctorId).then((res) => {
-      setSlots(res.data);
-      setLoading(false);
-    });
-  }
-
-  useEffect(loadSlots, [doctorId]);
-
   async function handleBook(slotId) {
-    setError('');
+    setBookError('');
     setBookingId(slotId);
     try {
       await patientApi.book(slotId);
       navigate('/my-appointments');
     } catch (err) {
-      setError(apiErrorMessage(err));
-      loadSlots(); // someone may have just taken the slot - refresh
+      setBookError(apiErrorMessage(err));
+      reload(); // someone may have just taken the slot - refresh
     } finally {
       setBookingId(null);
     }
   }
 
-  if (loading) return <div className="container mt-4">Loading schedule...</div>;
+  if (loading) return <div className="container mt-4">Loading schedule... (the server may take a moment to wake up)</div>;
+  if (error) return (
+    <div className="container mt-4">
+      <div className="alert alert-danger">{error}</div>
+      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
+    </div>
+  );
 
   return (
     <div className="container mt-4">
       <h1 className="h4 mb-4">Available appointments</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
+      {bookError && <div className="alert alert-danger">{bookError}</div>}
       {slots.length === 0 && <p className="text-muted">No open slots for this doctor right now.</p>}
       <div className="list-group">
         {slots.map((slot) => (

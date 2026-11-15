@@ -25,6 +25,7 @@ urlpatterns = [
     path('appointments/', views.MyAppointmentsView.as_view(), name='my-appointments'),
     path('appointments/<int:pk>/', views.AppointmentNoteUpdateView.as_view(), name='appointment-update'),
     path('appointments/<int:pk>/cancel/', views.CancelAppointmentView.as_view(), name='appointment-cancel'),
+    path('appointments/<int:pk>/reschedule/', views.RescheduleAppointmentView.as_view(), name='appointment-reschedule'),
 
     path('admin/dashboard/', views.AdminDashboardView.as_view(), name='admin-dashboard'),
     path('', include(router.urls)),

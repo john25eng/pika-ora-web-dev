@@ -14,6 +14,7 @@ export const patientApi = {
   myAppointments: () => client.get('/appointments/'),
   updateNote: (id, notes) => client.patch(`/appointments/${id}/`, { notes }),
   cancel: (id) => client.post(`/appointments/${id}/cancel/`),
+  reschedule: (id, slotId) => client.post(`/appointments/${id}/reschedule/`, { slot_id: slotId }),
 };
 
 export const adminApi = {
@@ -31,6 +32,7 @@ export const adminApi = {
   // appointments
   listAppointments: (query) => client.get('/admin/appointments/', { params: query ? { q: query } : {} }),
   cancelAppointment: (id) => client.post(`/admin/appointments/${id}/cancel/`),
+  rescheduleAppointment: (id, slotId) => client.post(`/admin/appointments/${id}/reschedule/`, { slot_id: slotId }),
 
   // patients
   listPatients: () => client.get('/admin/patients/'),

@@ -1,30 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
 
 const emptyForm = { doctor: '', date: '', start_time: '', end_time: '' };
 
 export default function AdminSlots() {
-  const [slots, setSlots] = useState([]);
-  const [doctors, setDoctors] = useState([]);
   const [filterDoctor, setFilterDoctor] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
 
-  function loadSlots(doctorId) {
-    adminApi.listSlots(doctorId || undefined).then((res) => setSlots(res.data));
-  }
+  const { data: doctorData } = useFetch(() => adminApi.listDoctors());
+  const doctors = doctorData ?? [];
 
-  useEffect(() => {
-    adminApi.listDoctors().then((res) => setDoctors(res.data));
-    loadSlots();
-  }, []);
-
-  function handleFilterChange(e) {
-    const val = e.target.value;
-    setFilterDoctor(val);
-    loadSlots(val);
-  }
+  const {
+    data: slotData,
+    loading,
+    error: loadError,
+    reload,
+  } = useFetch(() => adminApi.listSlots(filterDoctor || undefined), [filterDoctor]);
+  const slots = slotData ?? [];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -32,7 +27,7 @@ export default function AdminSlots() {
     try {
       await adminApi.createSlot(form);
       setForm(emptyForm);
-      loadSlots(filterDoctor);
+      reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -43,11 +38,19 @@ export default function AdminSlots() {
     setError('');
     try {
       await adminApi.deleteSlot(id);
-      loadSlots(filterDoctor);
+      reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
   }
+
+  if (loading) return <div className="container mt-4">Loading slots... (the server may take a moment to wake up)</div>;
+  if (loadError) return (
+    <div className="container mt-4">
+      <div className="alert alert-danger">{loadError}</div>
+      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
+    </div>
+  );
 
   return (
     <div className="container mt-4">
@@ -90,7 +93,7 @@ export default function AdminSlots() {
 
       <div className="mb-3" style={{ maxWidth: 260 }}>
         <label className="form-label">Filter by doctor</label>
-        <select className="form-select" value={filterDoctor} onChange={handleFilterChange}>
+        <select className="form-select" value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)}>
           <option value="">All doctors</option>
           {doctors.map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
         </select>

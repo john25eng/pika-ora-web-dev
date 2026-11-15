@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { patientApi } from '../../api/endpoints';
+import useFetch from '../../hooks/useFetch';
 
 export default function DoctorList() {
-  const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error, reload } = useFetch(() => patientApi.listDoctors());
+  const doctors = data ?? [];
 
-  useEffect(() => {
-    patientApi.listDoctors().then((res) => {
-      setDoctors(res.data);
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <div className="container mt-4">Loading doctors...</div>;
+  if (loading) return <div className="container mt-4">Loading doctors... (the server may take a moment to wake up)</div>;
+  if (error) return (
+    <div className="container mt-4">
+      <div className="alert alert-danger">{error}</div>
+      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
+    </div>
+  );
 
   return (
     <div className="container mt-4">

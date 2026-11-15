@@ -1,20 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
 
 const emptyForm = { first_name: '', last_name: '', specialty: '', bio: '', is_active: true };
 
 export default function AdminDoctors() {
-  const [doctors, setDoctors] = useState([]);
+  const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listDoctors());
+  const doctors = data ?? [];
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
-
-  function load() {
-    adminApi.listDoctors().then((res) => setDoctors(res.data));
-  }
-
-  useEffect(load, []);
 
   function startEdit(doc) {
     setEditingId(doc.id);
@@ -39,7 +35,7 @@ export default function AdminDoctors() {
         await adminApi.createDoctor(form);
       }
       resetForm();
-      load();
+      reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -47,13 +43,22 @@ export default function AdminDoctors() {
 
   async function handleDelete(id) {
     if (!window.confirm('Remove this doctor profile? This also removes their appointment slots.')) return;
+    setError('');
     try {
       await adminApi.deleteDoctor(id);
-      load();
+      reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
   }
+
+  if (loading) return <div className="container mt-4">Loading doctors... (the server may take a moment to wake up)</div>;
+  if (loadError) return (
+    <div className="container mt-4">
+      <div className="alert alert-danger">{loadError}</div>
+      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
+    </div>
+  );
 
   return (
     <div className="container mt-4">

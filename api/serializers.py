@@ -93,6 +93,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     """Read-heavy serializer used for listing appointments (patient + admin views)."""
 
     patient_name = serializers.CharField(source='patient.get_full_name', read_only=True)
+    doctor = serializers.IntegerField(source='slot.doctor_id', read_only=True)
     doctor_name = serializers.CharField(source='slot.doctor.full_name', read_only=True)
     date = serializers.DateField(source='slot.date', read_only=True)
     start_time = serializers.TimeField(source='slot.start_time', read_only=True)
@@ -100,7 +101,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
-            'id', 'patient', 'patient_name', 'slot', 'doctor_name',
+            'id', 'patient', 'patient_name', 'slot', 'doctor', 'doctor_name',
             'date', 'start_time', 'status', 'notes', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'patient', 'slot', 'status', 'created_at', 'updated_at']

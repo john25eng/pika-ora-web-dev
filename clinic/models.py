@@ -51,7 +51,7 @@ class Appointment(models.Model):
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='appointments'
     )
-    slot = models.OneToOneField(AppointmentSlot, on_delete=models.CASCADE, related_name='appointment')
+    slot = models.ForeignKey(AppointmentSlot, on_delete=models.CASCADE, related_name='appointments')
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.CONFIRMED)
     notes = models.TextField(blank=True, help_text='Optional note from the patient about this visit.')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -59,6 +59,13 @@ class Appointment(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['slot'],
+                condition=models.Q(status='confirmed'),
+                name='one_confirmed_appointment_per_slot',
+            )
+        ]
 
     def __str__(self):
         return f'{self.patient.username} with {self.slot.doctor.full_name} on {self.slot.date}'

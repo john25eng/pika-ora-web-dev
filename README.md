@@ -1,5 +1,12 @@
 # Piki Ora Medical Centre – Appointment System
 
+## Project stages
+
+- **Assessment 1 (Django MVT, server-rendered templates):** tag `assessment-1-mvt`
+  https://github.com/john25eng/pika-ora-web-dev/tree/assessment-1-mvt
+- **Assessment 2 (Django REST Framework API + React frontend):** `main` branch
+  (tag `assessment-2-drf-react`
+
 A full-stack clinic appointment system where patients can register, browse doctors, and book, reschedule, or cancel appointments. Administrators manage doctors, appointment slots, bookings, and patient accounts through a React dashboard instead of Django Admin.
 
 - **Frontend:** https://pika-ora-web-dev-1.onrender.com

@@ -1,6 +1,13 @@
 # Piki Ora Medical Centre - Appointment System
 
-Django web app for patient appointment booking and clinic administration.
+Django web app (MVT architecture) for patient appointment booking and clinic administration.
+
+## Live demo
+https://pika-ora-web-dev-mvt.onrender.com/
+
+- Admin login: `admin` / `Colgate123`
+- Register a new account on the site to test the patient flow.
+- The site runs on Render's free plan, so the first load may take up to a minute.
 
 ## Apps
 - `accounts` - custom user model (patient/admin role), registration, login
@@ -8,16 +15,12 @@ Django web app for patient appointment booking and clinic administration.
 - `dashboard` - custom admin interface (doctors, slots, appointments, patients).
   Django Admin (`/django-admin/`) is wired up for dev/testing only, per the assignment brief.
 
-## Local setup (PyCharm)
-1. Open this folder as a PyCharm project.
-2. Create a virtual environment: `File > Settings > Project > Python Interpreter > Add Interpreter > venv`.
-3. Open the PyCharm terminal and run:
-   ```
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py shell < seed_admin.py
-   python manage.py runserver
-   ```
-4. Visit http://127.0.0.1:8000/
-   - Admin login: `admin` / `Colgate123` 
-   - Register a new account to test the patient flow.
+## Architecture (MVT)
+- **Models** - `CustomUser`, `Doctor`, `AppointmentSlot`, `Appointment` (Django ORM, SQLite)
+- **Views** - function and class-based views with role checks for patients and admins
+- **Templates** - server-rendered HTML with role-based navigation
+- Double booking is prevented when a slot is booked.
+
+## Deployment
+Deployed on Render as a Web Service from the `assessment-1-mvt-deploy` branch.
+The admin account is created on each deploy from environment variables.

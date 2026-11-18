@@ -1,35 +1,61 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import RescheduleForm from '../../components/RescheduleForm';
 import useFetch from '../../hooks/useFetch';
 
-export default function AdminPatients() {
-  const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listPatients());
-  const patients = data ?? [];
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({});
+export default function AdminAppointments() {
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const { data, loading, error: loadError, reload } = useFetch(
+    () => adminApi.listAppointments(query),
+    [query]
+  );
+  const appointments = data ?? [];
+  const [reschedulingId, setReschedulingId] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  function startEdit(p) {
-    setEditingId(p.id);
-    setForm({
-      first_name: p.first_name, last_name: p.last_name,
-      email: p.email, phone_number: p.phone_number, is_active: p.is_active,
-    });
+  function handleSearch(e) {
+    e.preventDefault();
+    setQuery(search);
   }
 
-  async function save(id) {
+  async function handleCancel(id) {
+    if (!window.confirm('Cancel this appointment?')) return;
     setError('');
+    setSuccess('');
     try {
-      await adminApi.updatePatient(id, form);
-      setEditingId(null);
+      await adminApi.cancelAppointment(id);
       reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
   }
 
-  if (loading) return <div className="container mt-4">Loading patients... (the server may take a moment to wake up)</div>;
+  async function handleReschedule(id, slotId) {
+    setError('');
+    setSuccess('');
+    try {
+      await adminApi.rescheduleAppointment(id, slotId);
+      setReschedulingId(null);
+      setSuccess('Appointment moved to the new time.');
+      reload();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  }
+
+  // open future slots for the same doctor, excluding the one already held
+  function slotLoader(appt) {
+    const today = new Date().toISOString().slice(0, 10);
+    return () =>
+      adminApi.listSlots(appt.doctor).then((res) =>
+        res.data.filter((slot) => !slot.is_booked && slot.id !== appt.slot && slot.date >= today)
+      );
+  }
+
+  if (loading) return <div className="container mt-4">Loading appointments... (the server may take a moment to wake up)</div>;
   if (loadError) return (
     <div className="container mt-4">
       <div className="alert alert-danger">{loadError}</div>
@@ -39,60 +65,63 @@ export default function AdminPatients() {
 
   return (
     <div className="container mt-4">
-      <h1 className="h4 mb-4">Patient Accounts</h1>
+      <h1 className="h4 mb-4">All Appointments</h1>
       {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
-      <table className="table align-middle">
+      <form className="d-flex mb-3" style={{ maxWidth: 400 }} onSubmit={handleSearch}>
+        <input
+          className="form-control me-2"
+          placeholder="Search by patient or doctor name"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn btn-outline-primary">Search</button>
+      </form>
+
+      {appointments.length === 0 && <p className="text-muted">No appointments found.</p>}
+
+      <table className="table table-sm align-middle">
         <thead>
-          <tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th></th></tr>
+          <tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
-          {patients.map((p) => (
-            <tr key={p.id}>
-              {editingId === p.id ? (
-                <>
-                  <td className="d-flex gap-1">
-                    <input className="form-control form-control-sm" value={form.first_name}
-                      onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-                    <input className="form-control form-control-sm" value={form.last_name}
-                      onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+          {appointments.map((appt) => (
+            <Fragment key={appt.id}>
+              <tr>
+                <td>{appt.patient_name}</td>
+                <td>{appt.doctor_name}</td>
+                <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
+                <td>
+                  <span className={`badge ${appt.status === 'confirmed' ? 'bg-success' : 'bg-secondary'}`}>
+                    {appt.status}
+                  </span>
+                </td>
+                <td className="text-end">
+                  {appt.status === 'confirmed' && (
+                    <>
+                      <button className="btn btn-outline-primary btn-sm me-2" onClick={() => setReschedulingId(appt.id)}>
+                        Reschedule
+                      </button>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(appt.id)}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+              {reschedulingId === appt.id && (
+                <tr>
+                  <td colSpan={5}>
+                    <RescheduleForm
+                      loadSlots={slotLoader(appt)}
+                      onConfirm={(slotId) => handleReschedule(appt.id, slotId)}
+                      onCancel={() => setReschedulingId(null)}
+                    />
                   </td>
-                  <td>
-                    <input className="form-control form-control-sm" value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                  </td>
-                  <td>
-                    <input className="form-control form-control-sm" value={form.phone_number}
-                      onChange={(e) => setForm({ ...form, phone_number: e.target.value })} />
-                  </td>
-                  <td>
-                    <div className="form-check">
-                      <input type="checkbox" className="form-check-input" checked={form.is_active}
-                        onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-                      <label className="form-check-label small">Active</label>
-                    </div>
-                  </td>
-                  <td className="text-end">
-                    <button className="btn btn-primary btn-sm me-2" onClick={() => save(p.id)}>Save</button>
-                    <button className="btn btn-light btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td>{p.first_name} {p.last_name}</td>
-                  <td>{p.email}</td>
-                  <td>{p.phone_number || '—'}</td>
-                  <td>
-                    <span className={`badge ${p.is_active ? 'bg-success' : 'bg-secondary'}`}>
-                      {p.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="text-end">
-                    <button className="btn btn-outline-secondary btn-sm" onClick={() => startEdit(p)}>Edit</button>
-                  </td>
-                </>
+                </tr>
               )}
-            </tr>
+            </Fragment>
           ))}
         </tbody>
       </table>

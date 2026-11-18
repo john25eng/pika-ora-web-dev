@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { patientApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
 import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import SlotItem from '../../components/SlotItem';
 
 export default function DoctorSchedule() {
   const { doctorId } = useParams();
@@ -29,36 +33,19 @@ export default function DoctorSchedule() {
     }
   }
 
-  if (loading) return <div className="container mt-4">Loading schedule... (the server may take a moment to wake up)</div>;
-  if (error) return (
-    <div className="container mt-4">
-      <div className="alert alert-danger">{error}</div>
-      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
-    </div>
-  );
+  if (loading || error) {
+    return <LoadState loading={loading} error={error} onRetry={reload} label="Loading schedule..." />;
+  }
 
   return (
-    <div className="container mt-4">
-      <h1 className="h4 mb-4">Available appointments</h1>
-      {bookError && <div className="alert alert-danger">{bookError}</div>}
+    <PageLayout title="Available appointments">
+      <AlertMessage>{bookError}</AlertMessage>
       {slots.length === 0 && <p className="text-muted">No open slots for this doctor right now.</p>}
       <div className="list-group">
         {slots.map((slot) => (
-          <div key={slot.id} className="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <div className="fw-semibold">{slot.date}</div>
-              <div className="text-muted small">{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</div>
-            </div>
-            <button
-              className="btn btn-primary btn-sm"
-              disabled={bookingId === slot.id}
-              onClick={() => handleBook(slot.id)}
-            >
-              {bookingId === slot.id ? 'Booking...' : 'Book'}
-            </button>
-          </div>
+          <SlotItem key={slot.id} slot={slot} busy={bookingId === slot.id} onBook={handleBook} />
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }

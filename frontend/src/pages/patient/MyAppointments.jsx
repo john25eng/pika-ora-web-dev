@@ -1,64 +1,40 @@
 import { useState } from 'react';
 import { patientApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
-import RescheduleForm from '../../components/RescheduleForm';
 import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import AppointmentCard from '../../components/AppointmentCard';
 
 export default function MyAppointments() {
   const { data, loading, error: loadError, reload } = useFetch(() => patientApi.myAppointments());
   const appointments = data ?? [];
-  const [editingId, setEditingId] = useState(null);
-  const [reschedulingId, setReschedulingId] = useState(null);
-  const [noteDraft, setNoteDraft] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  function startEdit(appt) {
-    setReschedulingId(null);
-    setEditingId(appt.id);
-    setNoteDraft(appt.notes || '');
-  }
-
-  function startReschedule(appt) {
-    setEditingId(null);
-    setReschedulingId(appt.id);
-  }
-
-  async function saveNote(id) {
+  // runs an api call, shows any error, reloads the list and returns true when it worked
+  async function run(action, message = '') {
     setError('');
     setSuccess('');
     try {
-      await patientApi.updateNote(id, noteDraft);
-      setEditingId(null);
+      await action();
+      if (message) setSuccess(message);
       reload();
+      return true;
     } catch (err) {
       setError(apiErrorMessage(err));
+      return false;
     }
   }
 
-  async function reschedule(id, slotId) {
-    setError('');
-    setSuccess('');
-    try {
-      await patientApi.reschedule(id, slotId);
-      setReschedulingId(null);
-      setSuccess('Appointment moved to your new time.');
-      reload();
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    }
-  }
+  const saveNote = (id, notes) => run(() => patientApi.updateNote(id, notes));
+  const reschedule = (id, slotId) =>
+    run(() => patientApi.reschedule(id, slotId), 'Appointment moved to your new time.');
 
-  async function cancelAppointment(id) {
+  function cancel(id) {
     if (!window.confirm('Cancel this appointment?')) return;
-    setError('');
-    setSuccess('');
-    try {
-      await patientApi.cancel(id);
-      reload();
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    }
+    run(() => patientApi.cancel(id));
   }
 
   // open slots for the same doctor, excluding the one already held
@@ -69,78 +45,27 @@ export default function MyAppointments() {
         .then((res) => res.data.filter((slot) => slot.id !== appt.slot));
   }
 
-  if (loading) return <div className="container mt-4">Loading your appointments... (the server may take a moment to wake up)</div>;
-  if (loadError) return (
-    <div className="container mt-4">
-      <div className="alert alert-danger">{loadError}</div>
-      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
-    </div>
-  );
+  if (loading || loadError) {
+    return <LoadState loading={loading} error={loadError} onRetry={reload} label="Loading your appointments..." />;
+  }
 
   return (
-    <div className="container mt-4">
-      <h1 className="h4 mb-4">My Appointments</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+    <PageLayout title="My Appointments">
+      <AlertMessage>{error}</AlertMessage>
+      <AlertMessage type="success">{success}</AlertMessage>
       {appointments.length === 0 && <p className="text-muted">You have no appointments yet.</p>}
       <div className="vstack gap-3">
         {appointments.map((appt) => (
-          <div className="card shadow-sm" key={appt.id}>
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div>
-                  <h2 className="h6 mb-1">{appt.doctor_name}</h2>
-                  <div className="text-muted small mb-2">
-                    {appt.date} at {appt.start_time.slice(0, 5)}
-                  </div>
-                  <span className={`badge ${appt.status === 'confirmed' ? 'bg-success' : 'bg-secondary'}`}>
-                    {appt.status}
-                  </span>
-                </div>
-                {appt.status === 'confirmed' && (
-                  <div className="d-flex gap-2 flex-wrap">
-                    <button className="btn btn-outline-primary btn-sm" onClick={() => startReschedule(appt)}>
-                      Reschedule
-                    </button>
-                    <button className="btn btn-outline-secondary btn-sm" onClick={() => startEdit(appt)}>
-                      Edit note
-                    </button>
-                    <button className="btn btn-outline-danger btn-sm" onClick={() => cancelAppointment(appt.id)}>
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {editingId === appt.id ? (
-                <div className="mt-3">
-                  <textarea
-                    className="form-control mb-2"
-                    rows={3}
-                    value={noteDraft}
-                    onChange={(e) => setNoteDraft(e.target.value)}
-                    placeholder="Reason for visit, symptoms, etc. (optional)"
-                  />
-                  <div className="d-flex gap-2">
-                    <button className="btn btn-primary btn-sm" onClick={() => saveNote(appt.id)}>Save</button>
-                    <button className="btn btn-light btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
-                  </div>
-                </div>
-              ) : (
-                appt.notes && <p className="mt-3 mb-0 small">{appt.notes}</p>
-              )}
-
-              {reschedulingId === appt.id && (
-                <RescheduleForm
-                  loadSlots={slotLoader(appt)}
-                  onConfirm={(slotId) => reschedule(appt.id, slotId)}
-                  onCancel={() => setReschedulingId(null)}
-                />
-              )}
-            </div>
-          </div>
+          <AppointmentCard
+            key={appt.id}
+            appointment={appt}
+            loadSlots={slotLoader(appt)}
+            onSaveNote={saveNote}
+            onReschedule={reschedule}
+            onCancel={cancel}
+          />
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }

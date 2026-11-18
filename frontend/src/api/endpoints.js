@@ -1,3 +1,7 @@
+// API calls. Each function is the refactored form of the Postman "NodeJs - Axios"
+// code snippet for the same request: the method, path and JSON body are the same,
+// while the base URL and the Authorization token header come from the shared
+// axios client in client.js instead of being repeated in every call.
 import client from './client';
 
 export const authApi = {

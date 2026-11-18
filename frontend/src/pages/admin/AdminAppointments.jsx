@@ -1,8 +1,12 @@
 import { Fragment, useState } from 'react';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
-import RescheduleForm from '../../components/RescheduleForm';
 import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import StatusBadge from '../../components/StatusBadge';
+import RescheduleForm from '../../components/RescheduleForm';
 
 export default function AdminAppointments() {
   const [search, setSearch] = useState('');
@@ -41,8 +45,10 @@ export default function AdminAppointments() {
       setReschedulingId(null);
       setSuccess('Appointment moved to the new time.');
       reload();
+      return true;
     } catch (err) {
       setError(apiErrorMessage(err));
+      return false;
     }
   }
 
@@ -55,19 +61,14 @@ export default function AdminAppointments() {
       );
   }
 
-  if (loading) return <div className="container mt-4">Loading appointments... (the server may take a moment to wake up)</div>;
-  if (loadError) return (
-    <div className="container mt-4">
-      <div className="alert alert-danger">{loadError}</div>
-      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
-    </div>
-  );
+  if (loading || loadError) {
+    return <LoadState loading={loading} error={loadError} onRetry={reload} label="Loading appointments..." />;
+  }
 
   return (
-    <div className="container mt-4">
-      <h1 className="h4 mb-4">All Appointments</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+    <PageLayout title="All Appointments">
+      <AlertMessage>{error}</AlertMessage>
+      <AlertMessage type="success">{success}</AlertMessage>
 
       <form className="d-flex mb-3" style={{ maxWidth: 400 }} onSubmit={handleSearch}>
         <input
@@ -93,9 +94,10 @@ export default function AdminAppointments() {
                 <td>{appt.doctor_name}</td>
                 <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
                 <td>
-                  <span className={`badge ${appt.status === 'confirmed' ? 'bg-success' : 'bg-secondary'}`}>
-                    {appt.status}
-                  </span>
+                  <StatusBadge
+                    label={appt.status}
+                    variant={appt.status === 'confirmed' ? 'success' : 'secondary'}
+                  />
                 </td>
                 <td className="text-end">
                   {appt.status === 'confirmed' && (
@@ -125,6 +127,6 @@ export default function AdminAppointments() {
           ))}
         </tbody>
       </table>
-    </div>
+    </PageLayout>
   );
 }

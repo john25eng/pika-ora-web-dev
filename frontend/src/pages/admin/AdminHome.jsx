@@ -1,16 +1,15 @@
-import client from '../../api/client';
+import { adminApi } from '../../api/endpoints';
 import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import StatCard from '../../components/StatCard';
 
 export default function AdminHome() {
-  const { data: stats, loading, error, reload } = useFetch(() => client.get('/admin/dashboard/'));
+  const { data: stats, loading, error, reload } = useFetch(() => adminApi.dashboard());
 
-  if (loading) return <div className="container mt-4">Loading dashboard... (the server may take a moment to wake up)</div>;
-  if (error) return (
-    <div className="container mt-4">
-      <div className="alert alert-danger">{error}</div>
-      <button className="btn btn-outline-primary btn-sm" onClick={reload}>Try again</button>
-    </div>
-  );
+  if (loading || error) {
+    return <LoadState loading={loading} error={error} onRetry={reload} label="Loading dashboard..." />;
+  }
 
   const cards = [
     { label: 'Active doctors', value: stats.doctor_count },
@@ -20,20 +19,14 @@ export default function AdminHome() {
   ];
 
   return (
-    <div className="container mt-4">
-      <h1 className="h4 mb-4">Admin Dashboard</h1>
+    <PageLayout title="Admin Dashboard">
       <div className="row g-3">
         {cards.map((c) => (
           <div className="col-md-3" key={c.label}>
-            <div className="card shadow-sm text-center">
-              <div className="card-body">
-                <div className="display-6">{c.value}</div>
-                <div className="text-muted small">{c.label}</div>
-              </div>
-            </div>
+            <StatCard label={c.label} value={c.value} />
           </div>
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }

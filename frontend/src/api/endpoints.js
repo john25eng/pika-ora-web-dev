@@ -23,10 +23,12 @@ export const patientApi = {
 
 export const adminApi = {
   // doctors
+  dashboard: () => client.get('/admin/dashboard/'),
   listDoctors: () => client.get('/admin/doctors/'),
   createDoctor: (data) => client.post('/admin/doctors/', data),
   updateDoctor: (id, data) => client.patch(`/admin/doctors/${id}/`, data),
   deleteDoctor: (id) => client.delete(`/admin/doctors/${id}/`),
+
 
   // slots
   listSlots: (doctorId) => client.get('/admin/slots/', { params: doctorId ? { doctor: doctorId } : {} }),

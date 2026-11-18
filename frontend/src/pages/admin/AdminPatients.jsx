@@ -1,24 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import StatusBadge from '../../components/StatusBadge';
 
 export default function AdminPatients() {
-  const [patients, setPatients] = useState([]);
+  const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listPatients());
+  const patients = data ?? [];
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
 
-  function load() {
-    adminApi.listPatients().then((res) => setPatients(res.data));
-  }
-
-  useEffect(load, []);
-
   function startEdit(p) {
     setEditingId(p.id);
     setForm({
-      first_name: p.first_name, last_name: p.last_name,
-      email: p.email, phone_number: p.phone_number, is_active: p.is_active,
+      first_name: p.first_name,
+      last_name: p.last_name,
+      email: p.email,
+      phone_number: p.phone_number || '',
+      is_active: p.is_active,
     });
   }
 
@@ -27,16 +30,19 @@ export default function AdminPatients() {
     try {
       await adminApi.updatePatient(id, form);
       setEditingId(null);
-      load();
+      reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
   }
 
+  if (loading || loadError) {
+    return <LoadState loading={loading} error={loadError} onRetry={reload} label="Loading patients..." />;
+  }
+
   return (
-    <div className="container mt-4">
-      <h1 className="h4 mb-4">Patient Accounts</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
+    <PageLayout title="Patient Accounts">
+      <AlertMessage>{error}</AlertMessage>
 
       <table className="table align-middle">
         <thead>
@@ -79,9 +85,10 @@ export default function AdminPatients() {
                   <td>{p.email}</td>
                   <td>{p.phone_number || '—'}</td>
                   <td>
-                    <span className={`badge ${p.is_active ? 'bg-success' : 'bg-secondary'}`}>
-                      {p.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    <StatusBadge
+                      label={p.is_active ? 'Active' : 'Inactive'}
+                      variant={p.is_active ? 'success' : 'secondary'}
+                    />
                   </td>
                   <td className="text-end">
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => startEdit(p)}>Edit</button>
@@ -92,6 +99,6 @@ export default function AdminPatients() {
           ))}
         </tbody>
       </table>
-    </div>
+    </PageLayout>
   );
 }

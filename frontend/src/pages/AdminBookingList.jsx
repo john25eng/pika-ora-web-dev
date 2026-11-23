@@ -1,4 +1,5 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminApi } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import useFetch from '../hooks/useFetch';
@@ -6,9 +7,8 @@ import PageLayout from '../components/PageLayout';
 import LoadState from '../components/LoadState';
 import AlertMessage from '../components/AlertMessage';
 import StatusBadge from '../components/StatusBadge';
-import RescheduleForm from '../components/RescheduleForm';
 
-export default function AdminAppointments() {
+export default function AdminBookingList() {
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const { data, loading, error: loadError, reload } = useFetch(
@@ -16,9 +16,7 @@ export default function AdminAppointments() {
     [query]
   );
   const appointments = data ?? [];
-  const [reschedulingId, setReschedulingId] = useState(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   function handleSearch(e) {
     e.preventDefault();
@@ -28,37 +26,12 @@ export default function AdminAppointments() {
   async function handleCancel(id) {
     if (!window.confirm('Cancel this appointment?')) return;
     setError('');
-    setSuccess('');
     try {
       await adminApi.cancelAppointment(id);
       reload();
     } catch (err) {
       setError(apiErrorMessage(err));
     }
-  }
-
-  async function handleReschedule(id, slotId) {
-    setError('');
-    setSuccess('');
-    try {
-      await adminApi.rescheduleAppointment(id, slotId);
-      setReschedulingId(null);
-      setSuccess('Appointment moved to the new time.');
-      reload();
-      return true;
-    } catch (err) {
-      setError(apiErrorMessage(err));
-      return false;
-    }
-  }
-
-  // open future slots for the same doctor, excluding the one already held
-  function slotLoader(appt) {
-    const today = new Date().toISOString().slice(0, 10);
-    return () =>
-      adminApi.listSlots(appt.doctor).then((res) =>
-        res.data.filter((slot) => !slot.is_booked && slot.id !== appt.slot && slot.date >= today)
-      );
   }
 
   if (loading || loadError) {
@@ -68,7 +41,10 @@ export default function AdminAppointments() {
   return (
     <PageLayout title="All Appointments">
       <AlertMessage>{error}</AlertMessage>
-      <AlertMessage type="success">{success}</AlertMessage>
+
+            <div className="mb-3">
+        <Link to="/admin/appointments/new" className="btn btn-primary btn-sm">Add booking</Link>
+      </div>
 
       <form className="d-flex mb-3" style={{ maxWidth: 400 }} onSubmit={handleSearch}>
         <input
@@ -88,42 +64,29 @@ export default function AdminAppointments() {
         </thead>
         <tbody>
           {appointments.map((appt) => (
-            <Fragment key={appt.id}>
-              <tr>
-                <td>{appt.patient_name}</td>
-                <td>{appt.doctor_name}</td>
-                <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
-                <td>
-                  <StatusBadge
-                    label={appt.status}
-                    variant={appt.status === 'confirmed' ? 'success' : 'secondary'}
-                  />
-                </td>
-                <td className="text-end">
-                  {appt.status === 'confirmed' && (
-                    <>
-                      <button className="btn btn-outline-primary btn-sm me-2" onClick={() => setReschedulingId(appt.id)}>
-                        Reschedule
-                      </button>
-                      <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(appt.id)}>
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-              {reschedulingId === appt.id && (
-                <tr>
-                  <td colSpan={5}>
-                    <RescheduleForm
-                      loadSlots={slotLoader(appt)}
-                      onConfirm={(slotId) => handleReschedule(appt.id, slotId)}
-                      onCancel={() => setReschedulingId(null)}
-                    />
-                  </td>
-                </tr>
-              )}
-            </Fragment>
+            <tr key={appt.id}>
+              <td>{appt.patient_name}</td>
+              <td>{appt.doctor_name}</td>
+              <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
+              <td>
+                <StatusBadge
+                  label={appt.status}
+                  variant={appt.status === 'confirmed' ? 'success' : 'secondary'}
+                />
+              </td>
+              <td className="text-end">
+                {appt.status === 'confirmed' && (
+                  <>
+                    <Link to={`/admin/appointments/${appt.id}/edit`} className="btn btn-outline-primary btn-sm me-2">
+                      Edit
+                    </Link>
+                    <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(appt.id)}>
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>

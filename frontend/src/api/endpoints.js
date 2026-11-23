@@ -166,6 +166,14 @@ export const adminApi = {
       data: JSON.stringify({ slot_id: slotId }),
     }),
 
+      bookAppointment: (patientId, slotId) =>
+    client.request({
+      method: 'post',
+      url: '/admin/appointments/book/',
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ patient_id: patientId, slot_id: slotId }),
+    }),
+
   // patients
   listPatients: () =>
     client.request({

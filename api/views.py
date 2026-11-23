@@ -304,6 +304,37 @@ class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
         send_confirmation_email(appointment)
         return Response(AppointmentSerializer(appointment).data)
 
+    @action(detail=False, methods=['post'], url_path='book')
+    def book(self, request):
+        try:
+            patient_id = int(request.data.get('patient_id'))
+            slot_id = int(request.data.get('slot_id'))
+        except (TypeError, ValueError):
+            return Response(
+                {'detail': 'patient_id and slot_id are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            patient = User.objects.get(pk=patient_id, role=User.Role.PATIENT)
+        except User.DoesNotExist:
+            return Response({'detail': 'Patient not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        with transaction.atomic():
+            try:
+                slot = AppointmentSlot.objects.select_for_update().get(pk=slot_id)
+            except AppointmentSlot.DoesNotExist:
+                return Response({'detail': 'Slot not found.'}, status=status.HTTP_404_NOT_FOUND)
+            if slot.is_booked:
+                return Response({'detail': 'Sorry, that slot is already booked.'}, status=status.HTTP_409_CONFLICT)
+            if slot.date < timezone.localdate():
+                return Response({'detail': 'You cannot book a slot in the past.'}, status=status.HTTP_400_BAD_REQUEST)
+            appointment = Appointment.objects.create(patient=patient, slot=slot)
+            slot.is_booked = True
+            slot.save(update_fields=['is_booked'])
+
+        send_confirmation_email(appointment)
+        return Response(AppointmentSerializer(appointment).data, status=status.HTTP_201_CREATED)
+
 class AdminPatientViewSet(viewsets.ModelViewSet):
     """Admins can list, edit and delete patient accounts (patients self-register;
     admins are created via the create_admin management command)."""

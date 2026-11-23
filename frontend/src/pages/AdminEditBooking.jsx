@@ -1,91 +1,69 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { adminApi } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import useFetch from '../hooks/useFetch';
 import PageLayout from '../components/PageLayout';
 import LoadState from '../components/LoadState';
 import AlertMessage from '../components/AlertMessage';
-import StatusBadge from '../components/StatusBadge';
+import RescheduleForm from '../components/RescheduleForm';
 
-export default function AdminBookingList() {
-  const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('');
-  const { data, loading, error: loadError, reload } = useFetch(
-    () => adminApi.listAppointments(query),
-    [query]
-  );
-  const appointments = data ?? [];
+export default function AdminEditBooking() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listAppointments(''));
   const [error, setError] = useState('');
 
-  function handleSearch(e) {
-    e.preventDefault();
-    setQuery(search);
+  if (loading || loadError) {
+    return <LoadState loading={loading} error={loadError} onRetry={reload} label="Loading appointment..." />;
   }
 
-  async function handleCancel(id) {
-    if (!window.confirm('Cancel this appointment?')) return;
+  const appt = (data ?? []).find((a) => String(a.id) === String(id));
+
+  if (!appt || appt.status !== 'confirmed') {
+    return (
+      <PageLayout title="Edit Appointment">
+        <AlertMessage>Only confirmed appointments can be edited.</AlertMessage>
+        <Link to="/admin/appointments" className="btn btn-outline-secondary btn-sm">Back to appointments</Link>
+      </PageLayout>
+    );
+  }
+
+  // open future slots for the same doctor, excluding the one already held
+  function loadSlots() {
+    const today = new Date().toISOString().slice(0, 10);
+    return adminApi.listSlots(appt.doctor).then((res) =>
+      res.data.filter((slot) => !slot.is_booked && slot.id !== appt.slot && slot.date >= today)
+    );
+  }
+
+  async function handleConfirm(slotId) {
     setError('');
     try {
-      await adminApi.cancelAppointment(id);
-      reload();
+      await adminApi.rescheduleAppointment(appt.id, slotId);
+      navigate('/admin/appointments');
+      return true;
     } catch (err) {
       setError(apiErrorMessage(err));
+      return false;
     }
   }
 
-  if (loading || loadError) {
-    return <LoadState loading={loading} error={loadError} onRetry={reload} label="Loading appointments..." />;
-  }
-
   return (
-    <PageLayout title="All Appointments">
+    <PageLayout title="Edit Appointment">
       <AlertMessage>{error}</AlertMessage>
-
-      <form className="d-flex mb-3" style={{ maxWidth: 400 }} onSubmit={handleSearch}>
-        <input
-          className="form-control me-2"
-          placeholder="Search by patient or doctor name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button className="btn btn-outline-primary">Search</button>
-      </form>
-
-      {appointments.length === 0 && <p className="text-muted">No appointments found.</p>}
-
-      <table className="table table-sm align-middle">
-        <thead>
-          <tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th></th></tr>
-        </thead>
-        <tbody>
-          {appointments.map((appt) => (
-            <tr key={appt.id}>
-              <td>{appt.patient_name}</td>
-              <td>{appt.doctor_name}</td>
-              <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
-              <td>
-                <StatusBadge
-                  label={appt.status}
-                  variant={appt.status === 'confirmed' ? 'success' : 'secondary'}
-                />
-              </td>
-              <td className="text-end">
-                {appt.status === 'confirmed' && (
-                  <>
-                    <Link to={`/admin/appointments/${appt.id}/edit`} className="btn btn-outline-primary btn-sm me-2">
-                      Edit
-                    </Link>
-                    <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(appt.id)}>
-                      Cancel
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="card shadow-sm mb-3">
+        <div className="card-body">
+          <p className="mb-1"><strong>Patient:</strong> {appt.patient_name}</p>
+          <p className="mb-1"><strong>Doctor:</strong> {appt.doctor_name}</p>
+          <p className="mb-3"><strong>Current time:</strong> {appt.date} {appt.start_time.slice(0, 5)}</p>
+          <RescheduleForm
+            loadSlots={loadSlots}
+            onConfirm={handleConfirm}
+            onCancel={() => navigate('/admin/appointments')}
+          />
+        </div>
+      </div>
     </PageLayout>
   );
 }

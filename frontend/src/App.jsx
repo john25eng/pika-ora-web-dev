@@ -18,6 +18,7 @@ import AdminUserList from './pages/AdminUserList';
 
 import AdminDoctorForm from './pages/AdminDoctorForm';
 import AdminSlotForm from './pages/AdminSlotForm';
+import AdminUserForm from './pages/AdminUserForm';
 
 function Home() {
   const { user, loading } = useAuth();
@@ -70,6 +71,9 @@ export default function App() {
         } />
         <Route path="/admin/patients" element={
           <ProtectedRoute role="admin"><AdminUserList /></ProtectedRoute>
+        } />
+        <Route path="/admin/patients/:id/edit" element={
+          <ProtectedRoute role="admin"><AdminUserForm /></ProtectedRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />

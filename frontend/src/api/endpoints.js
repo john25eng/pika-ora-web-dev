@@ -93,6 +93,8 @@ export const adminApi = {
       url: '/admin/dashboard/',
     }),
 
+
+
   // doctors
   listDoctors: () =>
     client.request({
@@ -169,6 +171,12 @@ export const adminApi = {
     client.request({
       method: 'get',
       url: '/admin/patients/',
+    }),
+
+    deletePatient: (id) =>
+    client.request({
+      method: 'delete',
+      url: `/admin/patients/${id}/`,
     }),
 
   updatePatient: (id, data) =>

@@ -288,6 +288,7 @@ class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
                 models.Q(slot__doctor__last_name__icontains=query)
             )
         return qs
+            
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -304,11 +305,25 @@ class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(AppointmentSerializer(appointment).data)
 
 class AdminPatientViewSet(viewsets.ModelViewSet):
-    """Admins can list and edit patient accounts, but not create/delete them here
-    (patients self-register; admins are created via the create_admin management command)."""
-    http_method_names = ['get', 'patch', 'put', 'head', 'options']
+    """Admins can list, edit and delete patient accounts (patients self-register;
+    admins are created via the create_admin management command)."""
+    http_method_names = ['get', 'patch', 'put', 'delete', 'head', 'options']
     permission_classes = [IsAdminRole]
     serializer_class = PatientAccountSerializer
 
     def get_queryset(self):
         return User.objects.filter(role=User.Role.PATIENT)
+
+    def destroy(self, request, *args, **kwargs):
+        patient = self.get_object()
+        with transaction.atomic():
+            # free the slots held by this patient's confirmed appointments
+            held_slot_ids = list(
+                Appointment.objects.filter(
+                    patient=patient, status=Appointment.Status.CONFIRMED
+                ).values_list('slot_id', flat=True)
+            )
+            AppointmentSlot.objects.filter(pk__in=held_slot_ids).update(is_booked=False)
+            Appointment.objects.filter(patient=patient).delete()
+            patient.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

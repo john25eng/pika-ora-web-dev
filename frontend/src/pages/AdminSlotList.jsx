@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminApi } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import useFetch from '../hooks/useFetch';
@@ -6,9 +7,8 @@ import PageLayout from '../components/PageLayout';
 import LoadState from '../components/LoadState';
 import AlertMessage from '../components/AlertMessage';
 import StatusBadge from '../components/StatusBadge';
-import SlotForm from '../components/SlotForm';
 
-export default function AdminSlots() {
+export default function AdminSlotList() {
   const [filterDoctor, setFilterDoctor] = useState('');
   const [error, setError] = useState('');
 
@@ -22,18 +22,6 @@ export default function AdminSlots() {
     reload,
   } = useFetch(() => adminApi.listSlots(filterDoctor || undefined), [filterDoctor]);
   const slots = slotData ?? [];
-
-  async function addSlot(form) {
-    setError('');
-    try {
-      await adminApi.createSlot(form);
-      reload();
-      return true;
-    } catch (err) {
-      setError(apiErrorMessage(err));
-      return false;
-    }
-  }
 
   async function handleDelete(id) {
     if (!window.confirm('Delete this slot?')) return;
@@ -54,11 +42,8 @@ export default function AdminSlots() {
     <PageLayout title="Manage Appointment Slots">
       <AlertMessage>{error}</AlertMessage>
 
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <h2 className="h6 mb-3">Add a slot</h2>
-          <SlotForm doctors={doctors} onSubmit={addSlot} />
-        </div>
+      <div className="mb-3">
+        <Link to="/admin/slots/new" className="btn btn-primary btn-sm">Add slot</Link>
       </div>
 
       <div className="mb-3" style={{ maxWidth: 260 }}>

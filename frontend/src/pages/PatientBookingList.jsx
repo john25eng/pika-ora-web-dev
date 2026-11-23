@@ -1,48 +1,27 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { patientApi } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import useFetch from '../hooks/useFetch';
 import PageLayout from '../components/PageLayout';
 import LoadState from '../components/LoadState';
 import AlertMessage from '../components/AlertMessage';
-import AppointmentCard from '../components/AppointmentCard';
+import StatusBadge from '../components/StatusBadge';
 
-export default function MyAppointments() {
+export default function PatientBookingList() {
   const { data, loading, error: loadError, reload } = useFetch(() => patientApi.myAppointments());
   const appointments = data ?? [];
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // runs an api call, shows any error, reloads the list and returns true when it worked
-  async function run(action, message = '') {
+  async function handleCancel(id) {
+    if (!window.confirm('Cancel this appointment?')) return;
     setError('');
-    setSuccess('');
     try {
-      await action();
-      if (message) setSuccess(message);
+      await patientApi.cancel(id);
       reload();
-      return true;
     } catch (err) {
       setError(apiErrorMessage(err));
-      return false;
     }
-  }
-
-  const saveNote = (id, notes) => run(() => patientApi.updateNote(id, notes));
-  const reschedule = (id, slotId) =>
-    run(() => patientApi.reschedule(id, slotId), 'Appointment moved to your new time.');
-
-  function cancel(id) {
-    if (!window.confirm('Cancel this appointment?')) return;
-    run(() => patientApi.cancel(id));
-  }
-
-  // open slots for the same doctor, excluding the one already held
-  function slotLoader(appt) {
-    return () =>
-      patientApi
-        .doctorSlots(appt.doctor)
-        .then((res) => res.data.filter((slot) => slot.id !== appt.slot));
   }
 
   if (loading || loadError) {
@@ -52,20 +31,42 @@ export default function MyAppointments() {
   return (
     <PageLayout title="My Appointments">
       <AlertMessage>{error}</AlertMessage>
-      <AlertMessage type="success">{success}</AlertMessage>
       {appointments.length === 0 && <p className="text-muted">You have no appointments yet.</p>}
-      <div className="vstack gap-3">
-        {appointments.map((appt) => (
-          <AppointmentCard
-            key={appt.id}
-            appointment={appt}
-            loadSlots={slotLoader(appt)}
-            onSaveNote={saveNote}
-            onReschedule={reschedule}
-            onCancel={cancel}
-          />
-        ))}
-      </div>
+
+      {appointments.length > 0 && (
+        <table className="table table-sm align-middle">
+          <thead>
+            <tr><th>Doctor</th><th>Date</th><th>Status</th><th>Note</th><th></th></tr>
+          </thead>
+          <tbody>
+            {appointments.map((appt) => (
+              <tr key={appt.id}>
+                <td>{appt.doctor_name}</td>
+                <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
+                <td>
+                  <StatusBadge
+                    label={appt.status}
+                    variant={appt.status === 'confirmed' ? 'success' : 'secondary'}
+                  />
+                </td>
+                <td>{appt.notes || '—'}</td>
+                <td className="text-end">
+                  {appt.status === 'confirmed' && (
+                    <>
+                      <Link to={`/my-appointments/${appt.id}/edit`} className="btn btn-outline-primary btn-sm me-2">
+                        Edit
+                      </Link>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(appt.id)}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </PageLayout>
   );
 }

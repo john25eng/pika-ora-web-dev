@@ -21,6 +21,7 @@ import AdminSlotForm from './pages/AdminSlotForm';
 import AdminUserForm from './pages/AdminUserForm';
 import AdminEditBooking from './pages/AdminEditBooking';
 import AdminAddBooking from './pages/AdminAddBooking';
+import PatientEditBooking from './pages/PatientEditBooking';
 
 function Home() {
   const { user, loading } = useAuth();
@@ -47,6 +48,9 @@ export default function App() {
         } />
         <Route path="/my-appointments" element={
           <ProtectedRoute role="patient"><PatientBookingList /></ProtectedRoute>
+        } />
+        <Route path="/my-appointments/:id/edit" element={
+          <ProtectedRoute role="patient"><PatientEditBooking /></ProtectedRoute>
         } />
 
         {/* admin */}

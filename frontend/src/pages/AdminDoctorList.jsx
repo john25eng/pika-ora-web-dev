@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminApi } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import useFetch from '../hooks/useFetch';
@@ -6,30 +7,11 @@ import PageLayout from '../components/PageLayout';
 import LoadState from '../components/LoadState';
 import AlertMessage from '../components/AlertMessage';
 import StatusBadge from '../components/StatusBadge';
-import DoctorForm from '../components/DoctorForm';
 
-export default function AdminDoctors() {
+export default function AdminDoctorList() {
   const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listDoctors());
   const doctors = data ?? [];
-  const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
-
-  async function save(form) {
-    setError('');
-    try {
-      if (editing) {
-        await adminApi.updateDoctor(editing.id, form);
-      } else {
-        await adminApi.createDoctor(form);
-      }
-      setEditing(null);
-      reload();
-      return true;
-    } catch (err) {
-      setError(apiErrorMessage(err));
-      return false;
-    }
-  }
 
   async function handleDelete(id) {
     if (!window.confirm('Remove this doctor profile? This also removes their appointment slots.')) return;
@@ -50,16 +32,8 @@ export default function AdminDoctors() {
     <PageLayout title="Manage Doctors">
       <AlertMessage>{error}</AlertMessage>
 
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <h2 className="h6 mb-3">{editing ? 'Edit doctor' : 'Add doctor'}</h2>
-          <DoctorForm
-            key={editing ? editing.id : 'new'}
-            doctor={editing}
-            onSubmit={save}
-            onCancel={() => setEditing(null)}
-          />
-        </div>
+      <div className="mb-3">
+        <Link to="/admin/doctors/new" className="btn btn-primary btn-sm">Add doctor</Link>
       </div>
 
       <table className="table table-sm align-middle">
@@ -78,7 +52,7 @@ export default function AdminDoctors() {
                 />
               </td>
               <td className="text-end">
-                <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => setEditing(doc)}>Edit</button>
+                <Link to={`/admin/doctors/${doc.id}/edit`} className="btn btn-outline-secondary btn-sm me-2">Edit</Link>
                 <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(doc.id)}>Delete</button>
               </td>
             </tr>

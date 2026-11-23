@@ -15,6 +15,7 @@ import AdminDoctorList from './pages/AdminDoctorList';
 import AdminSlotList from './pages/AdminSlotList';
 import AdminBookingList from './pages/AdminBookingList';
 import AdminUserList from './pages/AdminUserList';
+import AdminDoctorForm from './pages/AdminDoctorForm';
 
 function Home() {
   const { user, loading } = useAuth();
@@ -47,8 +48,14 @@ export default function App() {
         <Route path="/admin" element={
           <ProtectedRoute role="admin"><AdminHome /></ProtectedRoute>
         } />
-        <Route path="/admin/doctors" element={
+                <Route path="/admin/doctors" element={
           <ProtectedRoute role="admin"><AdminDoctorList /></ProtectedRoute>
+        } />
+        <Route path="/admin/doctors/new" element={
+          <ProtectedRoute role="admin"><AdminDoctorForm /></ProtectedRoute>
+        } />
+        <Route path="/admin/doctors/:id/edit" element={
+          <ProtectedRoute role="admin"><AdminDoctorForm /></ProtectedRoute>
         } />
         <Route path="/admin/slots" element={
           <ProtectedRoute role="admin"><AdminSlotList /></ProtectedRoute>

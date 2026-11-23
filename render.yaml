@@ -2,11 +2,7 @@ services:
   - type: web
     name: piki-ora-api-docker
     runtime: docker
-             - type: web
-               name: piki-ora-api-docker
-               runtime: docker
-               plan: free
-               dockerfilePath: ./Dockerfile
+    plan: free
     dockerfilePath: ./Dockerfile
     envVars:
       - key: SECRET_KEY

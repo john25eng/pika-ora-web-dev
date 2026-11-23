@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './context/AuthContext';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -24,13 +23,9 @@ import AdminAddBooking from './pages/AdminAddBooking';
 import PatientEditBooking from './pages/PatientEditBooking';
 import ChangePassword from './pages/ChangePassword';
 import PasswordChanged from './pages/PasswordChanged';
+import Home from './pages/Home';
 
-function Home() {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'admin' ? '/admin' : '/doctors'} replace />;
-}
+
 
 export default function App() {
   return (

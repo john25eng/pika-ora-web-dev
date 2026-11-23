@@ -28,5 +28,7 @@ urlpatterns = [
     path('appointments/<int:pk>/reschedule/', views.RescheduleAppointmentView.as_view(), name='appointment-reschedule'),
 
     path('admin/dashboard/', views.AdminDashboardView.as_view(), name='admin-dashboard'),
+
+    path('auth/change-password/', views.ChangePasswordView.as_view(), name='change-password'),
     path('', include(router.urls)),
 ]

@@ -53,9 +53,12 @@ export default function Navbar() {
               </>
             )}
             {user ? (
-              <button className="btn btn-outline-light btn-sm my-2 my-lg-0" onClick={handleLogout}>
-                Log out ({user.first_name || user.username})
-              </button>
+              <>
+                <Link className="nav-link text-white-50" to="/change-password" onClick={closeMenu}>Change password</Link>
+                <button className="btn btn-outline-light btn-sm my-2 my-lg-0" onClick={handleLogout}>
+                  Log out ({user.first_name || user.username})
+                </button>
+              </>
             ) : (
               <>
                 <Link className="nav-link text-white-50" to="/login" onClick={closeMenu}>Login</Link>

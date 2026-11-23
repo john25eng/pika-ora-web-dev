@@ -22,6 +22,8 @@ import AdminUserForm from './pages/AdminUserForm';
 import AdminEditBooking from './pages/AdminEditBooking';
 import AdminAddBooking from './pages/AdminAddBooking';
 import PatientEditBooking from './pages/PatientEditBooking';
+import ChangePassword from './pages/ChangePassword';
+import PasswordChanged from './pages/PasswordChanged';
 
 function Home() {
   const { user, loading } = useAuth();
@@ -89,6 +91,12 @@ export default function App() {
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/change-password" element={
+          <ProtectedRoute><ChangePassword /></ProtectedRoute>
+        } />
+        <Route path="/password-changed" element={
+          <ProtectedRoute><PasswordChanged /></ProtectedRoute>
+        } />
       </Routes>
     </>
   );

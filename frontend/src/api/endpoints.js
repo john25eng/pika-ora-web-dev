@@ -35,6 +35,14 @@ export const authApi = {
       method: 'get',
       url: '/auth/me/',
     }),
+
+      changePassword: (data) =>
+    client.request({
+      method: 'post',
+      url: '/auth/change-password/',
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify(data),
+    }),
 };
 
 export const patientApi = {
@@ -161,7 +169,7 @@ export const adminApi = {
   rescheduleAppointment: (id, slotId) =>
     client.request({
       method: 'post',
-      url: `/admin/appointments/${id}/reschedule/`,
+          url: `/admin/appointments/${id}/reschedule/`,
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ slot_id: slotId }),
     }),

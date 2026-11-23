@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { patientApi } from '../../api/endpoints';
-import { apiErrorMessage } from '../../api/client';
-import useFetch from '../../hooks/useFetch';
-import PageLayout from '../../components/PageLayout';
-import LoadState from '../../components/LoadState';
-import AlertMessage from '../../components/AlertMessage';
-import AppointmentCard from '../../components/AppointmentCard';
+import { patientApi } from '../api/endpoints';
+import { apiErrorMessage } from '../api/client';
+import useFetch from '../hooks/useFetch';
+import PageLayout from '../components/PageLayout';
+import LoadState from '../components/LoadState';
+import AlertMessage from '../components/AlertMessage';
+import AppointmentCard from '../components/AppointmentCard';
 
 export default function MyAppointments() {
   const { data, loading, error: loadError, reload } = useFetch(() => patientApi.myAppointments());

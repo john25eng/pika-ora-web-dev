@@ -6,15 +6,15 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
-import DoctorList from './pages/patient/DoctorList';
-import DoctorSchedule from './pages/patient/DoctorSchedule';
-import MyAppointments from './pages/patient/MyAppointments';
+import DoctorList from './pages/DoctorList';
+import AvailableSlots from './pages/AvailableSlots';
+import PatientBookingList from './pages/PatientBookingList';
 
-import AdminHome from './pages/admin/AdminHome';
-import AdminDoctors from './pages/admin/AdminDoctors';
-import AdminSlots from './pages/admin/AdminSlots';
-import AdminAppointments from './pages/admin/AdminAppointments';
-import AdminPatients from './pages/admin/AdminPatients';
+import AdminHome from './pages/AdminHome';
+import AdminDoctorList from './pages/AdminDoctorList';
+import AdminSlotList from './pages/AdminSlotList';
+import AdminBookingList from './pages/AdminBookingList';
+import AdminUserList from './pages/AdminUserList';
 
 function Home() {
   const { user, loading } = useAuth();
@@ -37,10 +37,10 @@ export default function App() {
           <ProtectedRoute role="patient"><DoctorList /></ProtectedRoute>
         } />
         <Route path="/doctors/:doctorId" element={
-          <ProtectedRoute role="patient"><DoctorSchedule /></ProtectedRoute>
+          <ProtectedRoute role="patient"><AvailableSlots /></ProtectedRoute>
         } />
         <Route path="/my-appointments" element={
-          <ProtectedRoute role="patient"><MyAppointments /></ProtectedRoute>
+          <ProtectedRoute role="patient"><PatientBookingList /></ProtectedRoute>
         } />
 
         {/* admin */}
@@ -48,16 +48,16 @@ export default function App() {
           <ProtectedRoute role="admin"><AdminHome /></ProtectedRoute>
         } />
         <Route path="/admin/doctors" element={
-          <ProtectedRoute role="admin"><AdminDoctors /></ProtectedRoute>
+          <ProtectedRoute role="admin"><AdminDoctorList /></ProtectedRoute>
         } />
         <Route path="/admin/slots" element={
-          <ProtectedRoute role="admin"><AdminSlots /></ProtectedRoute>
+          <ProtectedRoute role="admin"><AdminSlotList /></ProtectedRoute>
         } />
         <Route path="/admin/appointments" element={
-          <ProtectedRoute role="admin"><AdminAppointments /></ProtectedRoute>
+          <ProtectedRoute role="admin"><AdminBookingList /></ProtectedRoute>
         } />
         <Route path="/admin/patients" element={
-          <ProtectedRoute role="admin"><AdminPatients /></ProtectedRoute>
+          <ProtectedRoute role="admin"><AdminUserList /></ProtectedRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />

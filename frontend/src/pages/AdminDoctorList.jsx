@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { adminApi } from '../../api/endpoints';
-import { apiErrorMessage } from '../../api/client';
-import useFetch from '../../hooks/useFetch';
-import PageLayout from '../../components/PageLayout';
-import LoadState from '../../components/LoadState';
-import AlertMessage from '../../components/AlertMessage';
-import StatusBadge from '../../components/StatusBadge';
-import DoctorForm from '../../components/DoctorForm';
+import { adminApi } from '../api/endpoints';
+import { apiErrorMessage } from '../api/client';
+import useFetch from '../hooks/useFetch';
+import PageLayout from '../components/PageLayout';
+import LoadState from '../components/LoadState';
+import AlertMessage from '../components/AlertMessage';
+import StatusBadge from '../components/StatusBadge';
+import DoctorForm from '../components/DoctorForm';
 
 export default function AdminDoctors() {
   const { data, loading, error: loadError, reload } = useFetch(() => adminApi.listDoctors());

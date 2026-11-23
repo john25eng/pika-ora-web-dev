@@ -4,7 +4,6 @@ import client from './client';
 // (Code snippet > NodeJs - Axios): a config object with method, url, headers and
 // data, sent with request(config).
 //
-// Two things are handled once in client.js instead of in every snippet:
 //   - the base address is the client's baseURL (set in client.js), so url is just the path
 //   - the "Authorization: Token ..." header is added by the client's request interceptor
 

@@ -1,12 +1,12 @@
 import { Fragment, useState } from 'react';
-import { adminApi } from '../../api/endpoints';
-import { apiErrorMessage } from '../../api/client';
-import useFetch from '../../hooks/useFetch';
-import PageLayout from '../../components/PageLayout';
-import LoadState from '../../components/LoadState';
-import AlertMessage from '../../components/AlertMessage';
-import StatusBadge from '../../components/StatusBadge';
-import RescheduleForm from '../../components/RescheduleForm';
+import { adminApi } from '../api/endpoints';
+import { apiErrorMessage } from '../api/client';
+import useFetch from '../hooks/useFetch';
+import PageLayout from '../components/PageLayout';
+import LoadState from '../components/LoadState';
+import AlertMessage from '../components/AlertMessage';
+import StatusBadge from '../components/StatusBadge';
+import RescheduleForm from '../components/RescheduleForm';
 
 export default function AdminAppointments() {
   const [search, setSearch] = useState('');

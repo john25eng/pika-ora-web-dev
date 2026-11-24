@@ -1,8 +1,8 @@
-import { adminApi } from '../api/endpoints';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import StatCard from '../components/StatCard';
+import { adminApi } from '../../api/endpoints';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import StatCard from '../../components/StatCard';
 
 export default function AdminHome() {
   const { data: stats, loading, error, reload } = useFetch(() => adminApi.dashboard());

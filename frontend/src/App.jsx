@@ -1,29 +1,28 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-
-import Login from './pages/Login';
-import Register from './pages/Register';
-
-import DoctorList from './pages/DoctorList';
-import AvailableSlots from './pages/AvailableSlots';
-import PatientBookingList from './pages/PatientBookingList';
-
-import AdminHome from './pages/AdminHome';
-import AdminDoctorList from './pages/AdminDoctorList';
-import AdminSlotList from './pages/AdminSlotList';
-import AdminBookingList from './pages/AdminBookingList';
-import AdminUserList from './pages/AdminUserList';
-
-import AdminDoctorForm from './pages/AdminDoctorForm';
-import AdminSlotForm from './pages/AdminSlotForm';
-import AdminUserForm from './pages/AdminUserForm';
-import AdminEditBooking from './pages/AdminEditBooking';
-import AdminAddBooking from './pages/AdminAddBooking';
-import PatientEditBooking from './pages/PatientEditBooking';
-import ChangePassword from './pages/ChangePassword';
-import PasswordChanged from './pages/PasswordChanged';
 import Home from './pages/Home';
+
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ChangePassword from './pages/auth/ChangePassword';
+import PasswordChanged from './pages/auth/PasswordChanged';
+
+import DoctorList from './pages/patient/DoctorList';
+import AvailableSlots from './pages/patient/AvailableSlots';
+import PatientBookingList from './pages/patient/PatientBookingList';
+import PatientEditBooking from './pages/patient/PatientEditBooking';
+
+import AdminHome from './pages/admin/AdminHome';
+import AdminDoctorList from './pages/admin/AdminDoctorList';
+import AdminDoctorForm from './pages/admin/AdminDoctorForm';
+import AdminSlotList from './pages/admin/AdminSlotList';
+import AdminSlotForm from './pages/admin/AdminSlotForm';
+import AdminBookingList from './pages/admin/AdminBookingList';
+import AdminAddBooking from './pages/admin/AdminAddBooking';
+import AdminEditBooking from './pages/admin/AdminEditBooking';
+import AdminUserList from './pages/admin/AdminUserList';
+import AdminUserForm from './pages/admin/AdminUserForm';
 
 
 

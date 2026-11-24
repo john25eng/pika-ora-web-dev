@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { adminApi } from '../api/endpoints';
-import { apiErrorMessage } from '../api/client';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import AlertMessage from '../components/AlertMessage';
-import DoctorForm from '../components/DoctorForm';
+import { adminApi } from '../../api/endpoints';
+import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import DoctorForm from '../../components/DoctorForm';
 
 export default function AdminDoctorForm() {
   const { id } = useParams();

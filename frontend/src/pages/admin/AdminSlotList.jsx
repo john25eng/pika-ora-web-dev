@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { adminApi } from '../api/endpoints';
-import { apiErrorMessage } from '../api/client';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import AlertMessage from '../components/AlertMessage';
-import StatusBadge from '../components/StatusBadge';
+import { adminApi } from '../../api/endpoints';
+import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import StatusBadge from '../../components/StatusBadge';
 
 export default function AdminSlotList() {
   const [filterDoctor, setFilterDoctor] = useState('');

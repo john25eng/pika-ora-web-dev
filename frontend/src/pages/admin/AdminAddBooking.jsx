@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { adminApi } from '../api/endpoints';
-import { apiErrorMessage } from '../api/client';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import AlertMessage from '../components/AlertMessage';
+import { adminApi } from '../../api/endpoints';
+import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
 
 export default function AdminAddBooking() {
   const navigate = useNavigate();

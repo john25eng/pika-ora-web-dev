@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { apiErrorMessage } from '../api/client';
+import { useAuth } from '../../context/AuthContext';
+import { apiErrorMessage } from '../../api/client';
 
 const initial = {
   username: '', first_name: '', last_name: '', email: '',

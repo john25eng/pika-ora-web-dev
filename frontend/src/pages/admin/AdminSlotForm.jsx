@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { adminApi } from '../api/endpoints';
-import { apiErrorMessage } from '../api/client';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import AlertMessage from '../components/AlertMessage';
-import SlotForm from '../components/SlotForm';
+import { adminApi } from '../../api/endpoints';
+import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import SlotForm from '../../components/SlotForm';
 
 export default function AdminSlotForm() {
   const navigate = useNavigate();

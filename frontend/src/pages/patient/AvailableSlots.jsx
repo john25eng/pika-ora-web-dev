@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { patientApi } from '../api/endpoints';
-import { apiErrorMessage } from '../api/client';
-import useFetch from '../hooks/useFetch';
-import PageLayout from '../components/PageLayout';
-import LoadState from '../components/LoadState';
-import AlertMessage from '../components/AlertMessage';
-import SlotItem from '../components/SlotItem';
+import { patientApi } from '../../api/endpoints';
+import { apiErrorMessage } from '../../api/client';
+import useFetch from '../../hooks/useFetch';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
+import SlotItem from '../../components/SlotItem';
 
 export default function DoctorSchedule() {
   const { doctorId } = useParams();

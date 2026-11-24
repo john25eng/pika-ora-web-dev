@@ -1,27 +1,20 @@
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError, models, transaction
+from django.db import transaction
 from django.utils import timezone
-from rest_framework import generics, status, viewsets
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as DjangoValidationError
 
 from clinic.models import Doctor, AppointmentSlot, Appointment
 
-
 from .permissions import IsAdminRole, IsPatientRole
 from .serializers import (
-    RegisterSerializer, UserSerializer, PatientAccountSerializer,
     DoctorSerializer, AppointmentSlotSerializer,
     AppointmentSerializer, AppointmentNoteSerializer,
 )
 
 User = get_user_model()
+
 
 def send_confirmation_email(appointment):
     from django.core.mail import send_mail
@@ -41,75 +34,46 @@ def send_confirmation_email(appointment):
     except Exception:
         pass
 
-# ============ auth ============
 
-class RegisterView(generics.CreateAPIView):
-    """Public registration - always creates a patient account."""
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
+def reschedule_appointment(appointment_id, slot_id, patient=None):
+    """moves a confirmed appointment to another open slot inside one transaction.
+    returns (appointment, None) on success or (None, error_response) on failure.
+    pass patient to restrict the lookup to that patient's own appointments."""
+    try:
+        slot_id = int(slot_id)
+    except (TypeError, ValueError):
+        return None, Response({'detail': 'A valid slot_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response(
-            {'token': token.key, 'user': UserSerializer(user).data},
-            status=status.HTTP_201_CREATED,
-        )
-
-
-class LoginView(ObtainAuthToken):
-    """Returns an auth token plus basic user/role info on successful login."""
-    permission_classes = [AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'user': UserSerializer(user).data})
-
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        request.user.auth_token.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class MeView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response(UserSerializer(request.user).data)
-
-class ChangePasswordView(APIView):
-    """Lets any logged-in user change their own password."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        old_password = request.data.get('old_password', '')
-        new_password = request.data.get('new_password', '')
-
-        if not request.user.check_password(old_password):
-            return Response(
-                {'old_password': ['Current password is incorrect.']},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    with transaction.atomic():
+        appointments = Appointment.objects.select_for_update()
+        if patient is not None:
+            appointments = appointments.filter(patient=patient)
         try:
-            validate_password(new_password, user=request.user)
-        except DjangoValidationError as exc:
-            return Response(
-                {'new_password': list(exc.messages)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            appointment = appointments.get(pk=appointment_id, status=Appointment.Status.CONFIRMED)
+        except Appointment.DoesNotExist:
+            return None, Response({'detail': 'Appointment not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        request.user.set_password(new_password)
-        request.user.save()
-        return Response({'detail': 'Password changed.'})
+        try:
+            new_slot = AppointmentSlot.objects.select_for_update().get(pk=slot_id)
+        except AppointmentSlot.DoesNotExist:
+            return None, Response({'detail': 'Slot not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if new_slot.pk == appointment.slot_id:
+            return None, Response({'detail': 'That is already your current slot.'}, status=status.HTTP_400_BAD_REQUEST)
+        if new_slot.is_booked:
+            return None, Response({'detail': 'Sorry, that slot is already booked.'}, status=status.HTTP_409_CONFLICT)
+        if new_slot.date < timezone.localdate():
+            return None, Response({'detail': 'You cannot move an appointment to a past date.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_slot = appointment.slot
+        old_slot.is_booked = False
+        old_slot.save(update_fields=['is_booked'])
+        new_slot.is_booked = True
+        new_slot.save(update_fields=['is_booked'])
+        appointment.slot = new_slot
+        appointment.save(update_fields=['slot', 'updated_at'])
+
+    return appointment, None
 
 
 # ============ patient-facing ============
@@ -181,46 +145,6 @@ class AppointmentNoteUpdateView(generics.UpdateAPIView):
             patient=self.request.user, status=Appointment.Status.CONFIRMED
         )
 
-def reschedule_appointment(appointment_id, slot_id, patient=None):
-    """moves a confirmed appointment to another open slot inside one transaction.
-    returns (appointment, None) on success or (None, error_response) on failure.
-    pass patient to restrict the lookup to that patient's own appointments."""
-    try:
-        slot_id = int(slot_id)
-    except (TypeError, ValueError):
-        return None, Response({'detail': 'A valid slot_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    with transaction.atomic():
-        appointments = Appointment.objects.select_for_update()
-        if patient is not None:
-            appointments = appointments.filter(patient=patient)
-        try:
-            appointment = appointments.get(pk=appointment_id, status=Appointment.Status.CONFIRMED)
-        except Appointment.DoesNotExist:
-            return None, Response({'detail': 'Appointment not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            new_slot = AppointmentSlot.objects.select_for_update().get(pk=slot_id)
-        except AppointmentSlot.DoesNotExist:
-            return None, Response({'detail': 'Slot not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if new_slot.pk == appointment.slot_id:
-            return None, Response({'detail': 'That is already your current slot.'}, status=status.HTTP_400_BAD_REQUEST)
-        if new_slot.is_booked:
-            return None, Response({'detail': 'Sorry, that slot is already booked.'}, status=status.HTTP_409_CONFLICT)
-        if new_slot.date < timezone.localdate():
-            return None, Response({'detail': 'You cannot move an appointment to a past date.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        old_slot = appointment.slot
-        old_slot.is_booked = False
-        old_slot.save(update_fields=['is_booked'])
-        new_slot.is_booked = True
-        new_slot.save(update_fields=['is_booked'])
-        appointment.slot = new_slot
-        appointment.save(update_fields=['slot', 'updated_at'])
-
-    return appointment, None
-
 
 class RescheduleAppointmentView(APIView):
     """Lets a patient move their own confirmed appointment to another open slot."""
@@ -232,6 +156,7 @@ class RescheduleAppointmentView(APIView):
             return error
         send_confirmation_email(appointment)
         return Response(AppointmentSerializer(appointment).data)
+
 
 class CancelAppointmentView(APIView):
     permission_classes = [IsPatientRole]
@@ -249,6 +174,7 @@ class CancelAppointmentView(APIView):
 
 
 # ============ admin ============
+
 class AdminDashboardView(APIView):
     """Summary counts for the admin dashboard home screen."""
     permission_classes = [IsAdminRole]
@@ -260,128 +186,3 @@ class AdminDashboardView(APIView):
             'patient_count': User.objects.filter(role=User.Role.PATIENT).count(),
             'open_slots': AppointmentSlot.objects.filter(is_booked=False).count(),
         })
-
-class AdminDoctorViewSet(viewsets.ModelViewSet):
-    queryset = Doctor.objects.all()
-    serializer_class = DoctorSerializer
-    permission_classes = [IsAdminRole]
-
-
-class AdminAppointmentSlotViewSet(viewsets.ModelViewSet):
-    queryset = AppointmentSlot.objects.select_related('doctor').all()
-    serializer_class = AppointmentSlotSerializer
-    permission_classes = [IsAdminRole]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        doctor_id = self.request.query_params.get('doctor')
-        if doctor_id:
-            qs = qs.filter(doctor_id=doctor_id)
-        return qs
-
-    def create(self, request, *args, **kwargs):
-        try:
-            return super().create(request, *args, **kwargs)
-        except IntegrityError:
-            return Response(
-                {'detail': 'That slot already exists for this doctor at this date/time.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    def destroy(self, request, *args, **kwargs):
-        slot = self.get_object()
-        if slot.is_booked:
-            return Response(
-                {'detail': 'Cannot delete a booked slot. Cancel the appointment first.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return super().destroy(request, *args, **kwargs)
-
-
-class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Appointment.objects.select_related('patient', 'slot', 'slot__doctor').all()
-    serializer_class = AppointmentSerializer
-    permission_classes = [IsAdminRole]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        query = self.request.query_params.get('q')
-        if query:
-            qs = qs.filter(
-                models.Q(patient__username__icontains=query) |
-                models.Q(patient__first_name__icontains=query) |
-                models.Q(patient__last_name__icontains=query) |
-                models.Q(slot__doctor__first_name__icontains=query) |
-                models.Q(slot__doctor__last_name__icontains=query)
-            )
-        return qs
-            
-
-    @action(detail=True, methods=['post'])
-    def cancel(self, request, pk=None):
-        appointment = self.get_object()
-        if appointment.status == Appointment.Status.CONFIRMED:
-            appointment.cancel()
-        return Response(AppointmentSerializer(appointment).data)
-    @action(detail=True, methods=['post'])
-    def reschedule(self, request, pk=None):
-        appointment, error = reschedule_appointment(pk, request.data.get('slot_id'))
-        if error:
-            return error
-        send_confirmation_email(appointment)
-        return Response(AppointmentSerializer(appointment).data)
-
-    @action(detail=False, methods=['post'], url_path='book')
-    def book(self, request):
-        try:
-            patient_id = int(request.data.get('patient_id'))
-            slot_id = int(request.data.get('slot_id'))
-        except (TypeError, ValueError):
-            return Response(
-                {'detail': 'patient_id and slot_id are required.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            patient = User.objects.get(pk=patient_id, role=User.Role.PATIENT)
-        except User.DoesNotExist:
-            return Response({'detail': 'Patient not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        with transaction.atomic():
-            try:
-                slot = AppointmentSlot.objects.select_for_update().get(pk=slot_id)
-            except AppointmentSlot.DoesNotExist:
-                return Response({'detail': 'Slot not found.'}, status=status.HTTP_404_NOT_FOUND)
-            if slot.is_booked:
-                return Response({'detail': 'Sorry, that slot is already booked.'}, status=status.HTTP_409_CONFLICT)
-            if slot.date < timezone.localdate():
-                return Response({'detail': 'You cannot book a slot in the past.'}, status=status.HTTP_400_BAD_REQUEST)
-            appointment = Appointment.objects.create(patient=patient, slot=slot)
-            slot.is_booked = True
-            slot.save(update_fields=['is_booked'])
-
-        send_confirmation_email(appointment)
-        return Response(AppointmentSerializer(appointment).data, status=status.HTTP_201_CREATED)
-
-class AdminPatientViewSet(viewsets.ModelViewSet):
-    """Admins can list, edit and delete patient accounts (patients self-register;
-    admins are created via the create_admin management command)."""
-    http_method_names = ['get', 'patch', 'put', 'delete', 'head', 'options']
-    permission_classes = [IsAdminRole]
-    serializer_class = PatientAccountSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(role=User.Role.PATIENT)
-
-    def destroy(self, request, *args, **kwargs):
-        patient = self.get_object()
-        with transaction.atomic():
-            # free the slots held by this patient's confirmed appointments
-            held_slot_ids = list(
-                Appointment.objects.filter(
-                    patient=patient, status=Appointment.Status.CONFIRMED
-                ).values_list('slot_id', flat=True)
-            )
-            AppointmentSlot.objects.filter(pk__in=held_slot_ids).update(is_booked=False)
-            Appointment.objects.filter(patient=patient).delete()
-            patient.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

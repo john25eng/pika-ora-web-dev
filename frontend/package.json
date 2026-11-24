@@ -10,9 +10,10 @@
     "react-router-dom": "^6.28.0",
     "react-scripts": "^5.0.1"
   },
-  "scripts": {
+    "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [

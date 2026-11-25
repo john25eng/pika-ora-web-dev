@@ -15,4 +15,4 @@ RUN SECRET_KEY=build-only-not-used-at-runtime python manage.py collectstatic --n
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "python manage.py migrate && python manage.py create_admin && gunicorn piki_ora.wsgi:application --bind 0.0.0.0:${PORT:-10000}"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py initadmin && gunicorn piki_ora.wsgi:application --bind 0.0.0.0:${PORT:-10000}"]

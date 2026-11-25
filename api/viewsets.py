@@ -121,7 +121,7 @@ class AdminAppointmentViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AdminPatientViewSet(viewsets.ModelViewSet):
     """Admins can list, edit and delete patient accounts (patients self-register;
-    admins are created via the create_admin management command)."""
+    admins are created via the initadmin management command)."""
     http_method_names = ['get', 'patch', 'put', 'delete', 'head', 'options']
     permission_classes = [IsAdminRole]
     serializer_class = PatientAccountSerializer

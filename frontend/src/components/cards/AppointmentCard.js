@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import StatusBadge from './StatusBadge';
-import RescheduleForm from './RescheduleForm';
+import RescheduleForm from '../forms/RescheduleForm';
 
 // one appointment with its note editor and reschedule form
 // the on... handlers must return true when the action worked

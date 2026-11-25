@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
-import PageLayout from '../../components/PageLayout';
-import AlertMessage from '../../components/AlertMessage';
+import PageLayout from '../../components/layout/PageLayout';
+import AlertMessage from '../../components/layout/AlertMessage';
 
 export default function ChangePassword() {
   const navigate = useNavigate();

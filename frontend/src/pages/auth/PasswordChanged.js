@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import PageLayout from '../../components/PageLayout';
-import AlertMessage from '../../components/AlertMessage';
+import PageLayout from '../../components/layout/PageLayout';
+import AlertMessage from '../../components/layout/AlertMessage';
 
 export default function PasswordChanged() {
   return (

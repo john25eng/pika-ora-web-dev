@@ -1,5 +1,33 @@
 {% extends "base.html" %}
-{% block title %}admin doctor list{% endblock %}
+{% block title %}Manage Doctors - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>admin doctor list</h1>
+<h1 class="h3 mb-4">Manage Doctors</h1>
+
+<div class="mb-3">
+  <a href="/admin/doctors/new" class="btn btn-primary btn-sm">Add doctor</a>
+</div>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr><th>Name</th><th>Specialty</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for item in doctors %}
+    <tr>
+      <td>{{ item.full_name }}</td>
+      <td>{{ item.specialty }}</td>
+      <td><span class="badge {% if item.is_active %}bg-success{% else %}bg-secondary{% endif %}">{% if item.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+      <td class="text-end">
+        <a href="/admin/doctors/{{ item.id }}/edit" class="btn btn-outline-secondary btn-sm me-2">Edit</a>
+        <form method="post" action="/api/admin/doctors/{{ item.id }}/" class="d-inline">{% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove this doctor and their slots?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-muted">No doctors yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

@@ -1,5 +1,32 @@
 {% extends "base.html" %}
-{% block title %}patient book list{% endblock %}
+{% block title %}My Appointments - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>patient book list</h1>
+<h1 class="h3 mb-4">My Appointments</h1>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr><th>Doctor</th><th>Date</th><th>Status</th><th>Note</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for item in bookings %}
+    <tr>
+      <td>{{ item.doctor_name }}</td>
+      <td>{{ item.date }} {{ item.start_time|time:"H:i" }}</td>
+      <td><span class="badge {% if item.status == 'confirmed' %}bg-success{% else %}bg-secondary{% endif %}">{{ item.status|title }}</span></td>
+      <td>{{ item.notes|default:"-" }}</td>
+      <td class="text-end">
+        {% if item.status == 'confirmed' %}
+        <a href="/my-appointments/{{ item.id }}/edit" class="btn btn-outline-primary btn-sm me-2">Edit</a>
+        <form method="post" action="/api/appointments/{{ item.id }}/cancel/" class="d-inline">{% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this appointment?')">Cancel</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">You have no appointments yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

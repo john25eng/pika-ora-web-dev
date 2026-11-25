@@ -1,5 +1,38 @@
 {% extends "base.html" %}
-{% block title %}patient edit booking{% endblock %}
+{% block title %}Edit Appointment - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>patient edit booking</h1>
+<h1 class="h3 mb-4">Edit Appointment</h1>
+
+<div class="card shadow-sm mb-3" style="max-width: 560px;">
+  <div class="card-body">
+    <p class="mb-1"><strong>Doctor:</strong> {{ booking.doctor_name }}</p>
+    <p class="mb-3"><strong>Current time:</strong> {{ booking.date }} {{ booking.start_time|time:"H:i" }}</p>
+
+    <form method="post" class="mb-4">
+      {% csrf_token %}
+      <div class="mb-2">
+        <label class="form-label" for="notes">Note</label>
+        <textarea class="form-control" id="notes" name="notes" rows="3">{{ booking.notes|default:"" }}</textarea>
+      </div>
+      <button type="submit" name="action" value="note" class="btn btn-outline-primary btn-sm">Save note</button>
+    </form>
+
+    <hr>
+    <h2 class="h6 mb-3">Move to a different time</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <select class="form-select" name="slot" required>
+          <option value="">Select a slot...</option>
+          {% for opt in slots %}
+          <option value="{{ opt.id }}">{{ opt.date }} {{ opt.start_time|time:"H:i" }} - {{ opt.end_time|time:"H:i" }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" name="action" value="reschedule" class="btn btn-primary me-2">Confirm</button>
+      <a href="/my-appointments" class="btn btn-light">Cancel</a>
+    </form>
+  </div>
+</div>
 {% endblock %}

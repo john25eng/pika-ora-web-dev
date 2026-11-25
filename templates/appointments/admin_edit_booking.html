@@ -1,5 +1,31 @@
 {% extends "base.html" %}
-{% block title %}admin edit booking{% endblock %}
+{% block title %}Edit Booking - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>admin edit booking</h1>
+<h1 class="h3 mb-4">Edit Booking</h1>
+
+<div class="card shadow-sm mb-3" style="max-width: 560px;">
+  <div class="card-body">
+    <p class="mb-1"><strong>Patient:</strong> {{ booking.patient_name }}</p>
+    <p class="mb-1"><strong>Doctor:</strong> {{ booking.doctor_name }}</p>
+    <p class="mb-3"><strong>Current time:</strong> {{ booking.date }} {{ booking.start_time|time:"H:i" }}</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label" for="slot">Move to a different time</label>
+        <select class="form-select" id="slot" name="slot" required>
+          <option value="">Select a slot...</option>
+          {% for opt in slots %}
+          <option value="{{ opt.id }}">{{ opt.date }} {{ opt.start_time|time:"H:i" }} - {{ opt.end_time|time:"H:i" }}</option>
+          {% empty %}
+          <option value="" disabled>No open slots for this doctor</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary me-2">Confirm</button>
+      <a href="/admin/appointments" class="btn btn-light">Cancel</a>
+    </form>
+  </div>
+</div>
 {% endblock %}

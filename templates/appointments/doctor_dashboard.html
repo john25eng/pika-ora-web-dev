@@ -1,5 +1,27 @@
 {% extends "base.html" %}
-{% block title %}doctor dashboard{% endblock %}
+{% block title %}Doctor Dashboard - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>doctor dashboard</h1>
+<h1 class="h3 mb-4">Doctor Dashboard</h1>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr><th>Patient</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for item in bookings %}
+    <tr>
+      <td>{{ item.patient_name }}</td>
+      <td>{{ item.date }}</td>
+      <td>{{ item.start_time|time:"H:i" }}</td>
+      <td><span class="badge {% if item.status == 'confirmed' %}bg-success{% else %}bg-secondary{% endif %}">{{ item.status|title }}</span></td>
+      <td class="text-end">
+        
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">You have no upcoming appointments.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

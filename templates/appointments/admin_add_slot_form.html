@@ -1,5 +1,47 @@
 {% extends "base.html" %}
-{% block title %}admin add slot form{% endblock %}
+{% block title %}Add Appointment Slot - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>admin add slot form</h1>
+<h1 class="h3 mb-4">Add Appointment Slot</h1>
+
+<p class="text-muted">The start time must be before the end time.</p>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">
+    {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="card shadow-sm" style="max-width: 560px;">
+  <div class="card-body">
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label" for="doctor">Doctor</label>
+    <select class="form-select" id="doctor" name="doctor" required>
+      <option value="">Select...</option>
+      {% for opt in doctors %}
+      <option value="{{ opt.id }}" {% if form.doctor == opt.id %}selected{% endif %}>{{ opt.full_name }} - {{ opt.specialty }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="date">Date</label>
+    <input type="date" class="form-control" id="date" name="date" value="{{ form.date|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="start_time">Start time</label>
+    <input type="time" class="form-control" id="start_time" name="start_time" value="{{ form.start_time|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="end_time">End time</label>
+    <input type="time" class="form-control" id="end_time" name="end_time" value="{{ form.end_time|default:'' }}" required>
+  </div>
+  <button type="submit" class="btn btn-primary me-2">Add slot</button>
+  <a href="/admin/slots" class="btn btn-light">Cancel</a>
+</form>
+  </div>
+</div>
 {% endblock %}

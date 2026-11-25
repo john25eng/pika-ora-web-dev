@@ -1,5 +1,35 @@
 {% extends "base.html" %}
-{% block title %}admin slot list{% endblock %}
+{% block title %}Manage Appointment Slots - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>admin slot list</h1>
+<h1 class="h3 mb-4">Manage Appointment Slots</h1>
+
+<div class="mb-3">
+  <a href="/admin/slots/new" class="btn btn-primary btn-sm">Add slot</a>
+</div>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for item in slots %}
+    <tr>
+      <td>{{ item.doctor_name }}</td>
+      <td>{{ item.date }}</td>
+      <td>{{ item.start_time|time:"H:i" }} - {{ item.end_time|time:"H:i" }}</td>
+      <td><span class="badge {% if item.is_booked %}bg-warning text-dark{% else %}bg-success{% endif %}">{% if item.is_booked %}Booked{% else %}Open{% endif %}</span></td>
+      <td class="text-end">
+        {% if not item.is_booked %}
+        <form method="post" action="/api/admin/slots/{{ item.id }}/" class="d-inline">{% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this slot?')">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">No slots yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

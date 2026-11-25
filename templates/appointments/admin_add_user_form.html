@@ -1,5 +1,48 @@
 {% extends "base.html" %}
-{% block title %}admin add user form{% endblock %}
+{% block title %}Add Patient - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>admin add user form</h1>
+<h1 class="h3 mb-4">Add Patient</h1>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">
+    {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="card shadow-sm" style="max-width: 560px;">
+  <div class="card-body">
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label" for="username">Username</label>
+    <input type="text" class="form-control" id="username" name="username" value="{{ form.username|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="first_name">First name</label>
+    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form.first_name|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="last_name">Last name</label>
+    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form.last_name|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="email">Email</label>
+    <input type="email" class="form-control" id="email" name="email" value="{{ form.email|default:'' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="phone_number">Phone number</label>
+    <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ form.phone_number|default:'' }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="password">Password</label>
+    <input type="password" class="form-control" id="password" name="password" value="" required>
+  </div>
+  <button type="submit" class="btn btn-primary me-2">Create patient</button>
+  <a href="/admin/patients" class="btn btn-light">Cancel</a>
+</form>
+  </div>
+</div>
 {% endblock %}

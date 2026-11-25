@@ -1,5 +1,25 @@
 {% extends "base.html" %}
-{% block title %}home{% endblock %}
+{% block title %}Welcome - Piki Ora Medical Centre{% endblock %}
+
 {% block content %}
-<h1>home</h1>
+<h1 class="h3 mb-4">Welcome</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <p class="lead mb-3">
+      {% if user.is_authenticated %}Welcome back, {{ user.first_name|default:user.username }}.{% else %}Book appointments with Piki Ora Medical Centre.{% endif %}
+    </p>
+    {% if user.is_authenticated %}
+      {% if user.role == 'admin' %}
+        <a href="/admin" class="btn btn-primary">Go to dashboard</a>
+      {% else %}
+        <a href="/doctors" class="btn btn-primary me-2">Find a doctor</a>
+        <a href="/my-appointments" class="btn btn-outline-primary">My appointments</a>
+      {% endif %}
+    {% else %}
+      <a href="/login" class="btn btn-primary me-2">Log in</a>
+      <a href="/register" class="btn btn-outline-primary">Register</a>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

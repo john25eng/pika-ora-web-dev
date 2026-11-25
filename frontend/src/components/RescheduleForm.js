@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiErrorMessage } from '../../api/client';
+import { apiErrorMessage } from '../api/client';
 
 // loadSlots must return a promise resolving to a list of open slots
 export default function RescheduleForm({ loadSlots, onConfirm, onCancel }) {

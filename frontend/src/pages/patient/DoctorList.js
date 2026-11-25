@@ -1,8 +1,8 @@
 import { patientApi } from '../../api/endpoints';
 import useFetch from '../../hooks/useFetch';
-import PageLayout from '../../components/layout/PageLayout';
-import LoadState from '../../components/layout/LoadState';
-import DoctorCard from '../../components/cards/DoctorCard';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import DoctorCard from '../../components/DoctorCard';
 
 export default function DoctorList() {
   const { data, loading, error, reload } = useFetch(() => patientApi.listDoctors());

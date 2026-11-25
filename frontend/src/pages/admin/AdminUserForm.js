@@ -3,9 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { adminApi } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
 import useFetch from '../../hooks/useFetch';
-import PageLayout from '../../components/layout/PageLayout';
-import LoadState from '../../components/layout/LoadState';
-import AlertMessage from '../../components/layout/AlertMessage';
+import PageLayout from '../../components/PageLayout';
+import LoadState from '../../components/LoadState';
+import AlertMessage from '../../components/AlertMessage';
 
 function UserEditForm({ patient }) {
   const navigate = useNavigate();

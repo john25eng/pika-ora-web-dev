@@ -42,7 +42,7 @@ export default function PatientBookingList() {
             {appointments.map((appt) => (
               <tr key={appt.id}>
                 <td>{appt.doctor_name}</td>
-                <td>{appt.date} {appt.start_time.slice(0, 5)}</td>
+                <td>{appt.date} {appt.start_time.slice(0, 5)}{appt.end_time && ` - ${appt.end_time.slice(0, 5)}`}</td>
                 <td>
                   <StatusBadge
                     label={appt.status}

@@ -56,7 +56,7 @@ export default function AdminEditBooking() {
         <div className="card-body">
           <p className="mb-1"><strong>Patient:</strong> {appt.patient_name}</p>
           <p className="mb-1"><strong>Doctor:</strong> {appt.doctor_name}</p>
-          <p className="mb-3"><strong>Current time:</strong> {appt.date} {appt.start_time.slice(0, 5)}</p>
+          <p className="mb-3"><strong>Current time:</strong> {appt.date} {appt.start_time.slice(0, 5)}{appt.end_time && ` - ${appt.end_time.slice(0, 5)}`}</p>
           <RescheduleForm
             loadSlots={loadSlots}
             onConfirm={handleConfirm}

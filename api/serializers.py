@@ -97,14 +97,14 @@ class AppointmentSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(source='slot.doctor.full_name', read_only=True)
     date = serializers.DateField(source='slot.date', read_only=True)
     start_time = serializers.TimeField(source='slot.start_time', read_only=True)
+    end_time = serializers.TimeField(source='slot.end_time', read_only=True)
 
     class Meta:
         model = Appointment
         fields = [
             'id', 'patient', 'patient_name', 'slot', 'doctor', 'doctor_name',
-            'date', 'start_time', 'status', 'notes', 'created_at', 'updated_at',
+            'date', 'start_time', 'end_time', 'status', 'notes', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'patient', 'slot', 'status', 'created_at', 'updated_at']
 
 
 class AppointmentNoteSerializer(serializers.ModelSerializer):

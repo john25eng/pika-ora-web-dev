@@ -53,7 +53,7 @@ function EditBookingForm({ appt }) {
       <div className="card shadow-sm mb-3">
         <div className="card-body">
           <p className="mb-1"><strong>Doctor:</strong> {appt.doctor_name}</p>
-          <p className="mb-3"><strong>Current time:</strong> {appt.date} {appt.start_time.slice(0, 5)}</p>
+          <p className="mb-3"><strong>Current time:</strong> {appt.date} {appt.start_time.slice(0, 5)}{appt.end_time && ` - ${appt.end_time.slice(0, 5)}`}</p>
 
           <div className="mb-3">
             <label className="form-label">Note</label>
